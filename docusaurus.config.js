@@ -40,12 +40,7 @@ const config = {
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
           editUrl:
-            'https://github.com/yukino-org/yukino/tree/main/docs/',
-        },
-        blog: {
-          showReadingTime: true,
-          editUrl:
-            'https://github.com/yukino-org/yukino/tree/main/docs/',
+            'https://github.com/Sanchit-codes/yukino-docs/tree/main/docs/',
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
@@ -85,12 +80,12 @@ const config = {
             position: 'left'
           },
           {
-            href: 'https://github.com/yukino-org/yukino',
+            href: 'https://github.com/Sanchit-codes/yukino',
             label: 'GitHub',
             position: 'right',
           },
           {
-            href: 'https://discord.gg/yukino',
+            href: 'https://discord.kwin.in/',
             label: 'Discord',
             position: 'right',
           },
@@ -125,7 +120,7 @@ const config = {
               },
               {
                 label: 'GitHub Discussions',
-                href: 'https://github.com/yukino-org/yukino/discussions',
+                href: 'https://github.com/Sanchit-codes/yukino/discussions',
               },
             ],
           },
@@ -158,7 +153,7 @@ const config = {
       announcementBar: {
         id: 'support_us',
         content:
-          '⭐ If you like Yukino, give it a star on <a target="_blank" rel="noopener noreferrer" href="https://github.com/yukino-org/yukino">GitHub</a>!',
+          '⭐ If you like Yukino, give it a star on <a target="_blank" rel="noopener noreferrer" href="https://github.com/Sanchit-codes/yukino">GitHub</a>!',
         backgroundColor: '#20232a',
         textColor: '#fff',
         isCloseable: true,
