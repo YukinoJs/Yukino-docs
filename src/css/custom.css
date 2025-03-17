@@ -27,8 +27,7 @@ a:hover {
 }
 
 .footer {
-    background-color: var(--ifm-background-surface-color);
-    color: white;
+    color: var(--ifm-color-primary-darkest);
     text-align: center;
     padding: 10px;
 }
@@ -103,7 +102,7 @@ a:hover {
   --ifm-color-primary: #22d3ee; /* Lighter teal for dark mode */
   --ifm-color-primary-dark: #0ea5e9;
   --ifm-color-primary-darker: #0284c7;
-  --ifm-color-primary-darkest: #0369a1;
+  --ifm-color-primary-darkest: #006aa3;
   --ifm-color-primary-light: #67e8f9;
   --ifm-color-primary-lighter: #a5f3fc;
   --ifm-color-primary-lightest: #cffafe;
@@ -171,7 +170,7 @@ body {
 }
 
 .button.button--secondary {
-  color: white;
+  color: rgb(155, 155, 155);
   border-color: white;
   background: transparent;
 }
@@ -344,6 +343,7 @@ table th, table td {
 }
 
 .footer__title {
+  color:var(--ifm-color-primary-dark);
   font-size: 1.2rem;
   font-weight: 600;
 }
