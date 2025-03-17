@@ -1,0 +1,335 @@
+# Installation Guide
+
+## Prerequisites
+
+Before installing Yukino, ensure you have:
+
+1. **Node.js** version 16.x or higher
+2. **Java** version 17 or higher (for Lavalink)
+3. **Discord Bot Token** with these privileged intents:
+   - GUILDS
+   - GUILD_VOICE_STATES
+   - GUILD_MESSAGES
+
+## Installing Yukino
+
+### Using npm
+```bash
+npm install yukino discord.js
+```
+
+### Using yarn
+```bash
+yarn add yukino discord.js
+```
+
+### Using pnpm
+```bash
+pnpm add yukino discord.js
+```
+
+## Setting Up Lavalink
+
+### 1. Download Lavalink
+
+Download the latest Lavalink.jar from:
+- [Official Lavalink Releases](https://github.com/lavalink-devs/Lavalink/releases)
+- Or use the direct link to the latest version: [Lavalink.jar](https://github.com/lavalink-devs/Lavalink/releases/latest/download/Lavalink.jar)
+
+### 2. Create Configuration
+
+Create `application.yml` in the same directory as Lavalink.jar:
+
+```yaml
+server:
+  port: 2333
+  address: 0.0.0.0
+lavalink:
+  server:
+    password: "youshallnotpass"
+    sources:
+      youtube: true
+      bandcamp: true
+      soundcloud: true
+      twitch: true
+      vimeo: true
+      http: true
+      local: false
+    bufferDurationMs: 400
+    frameBufferDurationMs: 1000
+    youtubePlaylistLoadLimit: 6
+    playerUpdateInterval: 5
+    youtubeSearchEnabled: true
+    soundcloudSearchEnabled: true
+    gc-warnings: true
+
+metrics:
+  prometheus:
+    enabled: false
+    endpoint: /metrics
+
+sentry:
+  dsn: ""
+  environment: ""
+
+logging:
+  file:
+    max-history: 30
+    max-size: 1GB
+  path: ./logs/
+
+  level:
+    root: INFO
+    lavalink: INFO
+```
+
+### 3. Start Lavalink
+
+Create a startup script:
+
+#### Windows (start.bat)
+```batch
+java -jar Lavalink.jar
+```
+
+#### Linux/macOS (start.sh)
+```bash
+#!/bin/bash
+java -jar Lavalink.jar
+```
+
+Make the script executable on Linux/macOS:
+```bash
+chmod +x start.sh
+```
+
+### 4. Configure Your Bot
+
+Basic setup with TypeScript:
+
+```typescript
+import { Client, GatewayIntentBits } from 'discord.js';
+import { YukinoClient } from 'yukino';
+
+// Create Discord.js client
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent
+  ]
+});
+
+// Create Yukino client
+const yukino = new YukinoClient(client, {
+  client: client,
+  auth: 'youshallnotpass', // Must match Lavalink password
+  debug: true // Enable for detailed logging
+}, {
+  name: 'default',
+  url: 'localhost:2333',
+  auth: 'youshallnotpass',
+  secure: false, // Use true for HTTPS
+  version: '4' // Lavalink API version
+});
+
+// Connect when bot is ready
+client.once('ready', () => {
+  console.log('Bot is ready!');
+  yukino.connect();
+});
+
+// Login to Discord
+client.login('YOUR_BOT_TOKEN');
+```
+
+## Development Setup
+
+### 1. Project Structure
+
+Recommended project structure:
+```
+your-bot/
+├── src/
+│   ├── index.ts
+│   ├── commands/
+│   │   └── music/
+│   ├── events/
+│   │   └── voice/
+│   └── utils/
+├── lavalink/
+│   ├── Lavalink.jar
+│   └── application.yml
+├── package.json
+└── tsconfig.json
+```
+
+### 2. TypeScript Configuration
+
+Create `tsconfig.json`:
+```json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"]
+}
+```
+
+### 3. Package Configuration
+
+Update your `package.json`:
+```json
+{
+  "name": "your-bot",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "build": "tsc",
+    "lavalink": "cd lavalink && java -jar Lavalink.jar"
+  },
+  "dependencies": {
+    "discord.js": "^14.0.0",
+    "yukino": "^1.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.9.0",
+    "ts-node": "^10.9.0",
+    "@types/node": "^18.0.0"
+  }
+}
+```
+
+## Production Setup
+
+### 1. Docker Setup
+
+Create a `Dockerfile`:
+```dockerfile
+FROM node:16-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+RUN npm run build
+
+CMD ["npm", "start"]
+```
+
+Create a `docker-compose.yml`:
+```yaml
+version: '3.8'
+services:
+  lavalink:
+    image: fredboat/lavalink:latest
+    container_name: lavalink
+    restart: unless-stopped
+    environment:
+      - SERVER_PORT=2333
+      - SERVER_ADDRESS=0.0.0.0
+      - LAVALINK_SERVER_PASSWORD=youshallnotpass
+    volumes:
+      - ./lavalink/application.yml:/opt/Lavalink/application.yml
+    networks:
+      - bot-network
+
+  bot:
+    build: .
+    container_name: music-bot
+    restart: unless-stopped
+    depends_on:
+      - lavalink
+    environment:
+      - DISCORD_TOKEN=your-bot-token
+      - LAVALINK_HOST=lavalink
+      - LAVALINK_PORT=2333
+      - LAVALINK_PASSWORD=youshallnotpass
+    networks:
+      - bot-network
+
+networks:
+  bot-network:
+    driver: bridge
+```
+
+### 2. Process Management
+
+For non-Docker deployments, use PM2:
+
+```bash
+# Install PM2
+npm install -g pm2
+
+# Start Lavalink
+pm2 start "java -jar Lavalink.jar" --name "lavalink" --cwd "./lavalink"
+
+# Start bot
+pm2 start npm --name "music-bot" -- start
+
+# Save PM2 configuration
+pm2 save
+
+# Enable startup on system boot
+pm2 startup
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Lavalink Connection Failed**
+   - Check if Java 17+ is installed
+   - Verify Lavalink is running (default port: 2333)
+   - Confirm passwords match in both Lavalink and bot configs
+
+2. **Voice Connection Issues**
+   - Verify bot has required intents
+   - Check voice channel permissions
+   - Enable debug logging for detailed error messages
+
+3. **Track Loading Failed**
+   - Check Lavalink server logs
+   - Verify source is enabled in application.yml
+   - Test with direct YouTube URL first
+
+### Debug Mode
+
+Enable debug mode for detailed logging:
+```typescript
+const yukino = new YukinoClient(client, {
+  // ...other options
+  debug: true
+});
+```
+
+### Health Check
+
+Create a simple health check endpoint:
+```typescript
+import express from 'express';
+const app = express();
+
+app.get('/health', (req, res) => {
+  const status = {
+    bot: client.isReady(),
+    lavalink: yukino.isReady,
+    players: yukino.players.size
+  };
+  res.json(status);
+});
+
+app.listen(3000);
+```

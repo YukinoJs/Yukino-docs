@@ -1,0 +1,267 @@
+# REST API
+
+The `Rest` class handles HTTP communication with the Lavalink server. It provides methods for track loading, player management, and server information.
+
+## Constructor
+
+```typescript
+import { Rest } from 'yukino';
+
+const rest = new Rest({
+  url: 'localhost:2333',
+  auth: 'your-password',
+  secure: false,    // Use HTTPS
+  timeout: 15000,   // Request timeout in ms
+  version: '4',     // Lavalink API version
+  debug: false      // Enable debug logging
+});
+```
+
+## Track Loading
+
+### `loadTracks(identifier: string)`
+Load tracks from URLs or search queries.
+
+```typescript
+// Load from URL
+const result = await rest.loadTracks('https://youtube.com/watch?v=...');
+
+// Search YouTube
+const searchResult = await rest.loadTracks('ytsearch:your search query');
+
+// Handle different result types
+switch (result.loadType) {
+  case 'track':
+    console.log('Single track:', result.data[0].info.title);
+    break;
+    
+  case 'playlist':
+    console.log('Playlist:', result.playlistInfo?.name);
+    console.log('Track count:', result.data?.length);
+    break;
+    
+  case 'search':
+    console.log('Search results:', result.data?.length);
+    break;
+    
+  case 'empty':
+    console.log('No matches found');
+    break;
+    
+  case 'error':
+    console.error('Error:', result.exception?.message);
+    break;
+}
+```
+
+### `decodeTrack(encodedTrack: string)`
+Decode a base64 track string into track information.
+
+```typescript
+const trackInfo = await rest.decodeTrack('base64trackstring...');
+console.log('Track title:', trackInfo.title);
+```
+
+### `encodeTrack(track: Record<string, any>)`
+Encode track information into a base64 string.
+
+```typescript
+const encoded = await rest.encodeTrack({
+  title: 'Song Name',
+  author: 'Artist',
+  length: 180000
+});
+```
+
+## Player Management
+
+### `updatePlayer(sessionId: string, guildId: string, data: any)`
+Update a player's state via REST API.
+
+```typescript
+await rest.updatePlayer('session-id', 'guild-id', {
+  track: {
+    encoded: 'base64track...'
+  },
+  volume: 100,
+  paused: false
+});
+```
+
+### `getPlayer(sessionId: string, guildId: string)`
+Get information about a specific player.
+
+```typescript
+const player = await rest.getPlayer('session-id', 'guild-id');
+console.log('Current track:', player.track);
+```
+
+### `getPlayers(sessionId: string)`
+Get all players in a session.
+
+```typescript
+const players = await rest.getPlayers('session-id');
+console.log('Active players:', players.length);
+```
+
+### `destroyPlayer(sessionId: string, guildId: string)`
+Destroy a player instance.
+
+```typescript
+await rest.destroyPlayer('session-id', 'guild-id');
+```
+
+## Session Management
+
+### `updateSession(sessionId: string, resumeKey: string, timeout: number)`
+Update session configuration for resuming.
+
+```typescript
+await rest.updateSession(
+  'session-id',
+  'resume-key',
+  60 // Resume timeout in seconds
+);
+```
+
+### `getSessions()`
+Get all active Lavalink sessions.
+
+```typescript
+const sessions = await rest.getSessions();
+console.log('Active sessions:', sessions.length);
+```
+
+### `getSession(sessionId: string)`
+Get information about a specific session.
+
+```typescript
+const session = await rest.getSession('session-id');
+console.log('Session details:', session);
+```
+
+## Server Information
+
+### `version()`
+Get Lavalink server version.
+
+```typescript
+const version = await rest.version();
+console.log('Lavalink version:', version);
+```
+
+### `info()`
+Get detailed server information.
+
+```typescript
+const info = await rest.info();
+console.log('Server info:', info);
+```
+
+### `stats()`
+Get server statistics.
+
+```typescript
+const stats = await rest.stats();
+console.log('CPU Usage:', stats.cpu.systemLoad);
+console.log('Memory Used:', stats.memory.used);
+```
+
+## Error Handling
+
+The REST client includes comprehensive error handling:
+
+```typescript
+try {
+  await rest.loadTracks('invalid://url');
+} catch (error) {
+  console.error('Status:', error.response?.status);
+  console.error('Message:', error.response?.data);
+}
+```
+
+## Debug Mode
+
+When debug mode is enabled:
+```typescript
+const rest = new Rest({
+  url: 'localhost:2333',
+  auth: 'password',
+  debug: true // Enable debug logging
+});
+```
+
+You'll see detailed logs for:
+- All HTTP requests and responses
+- Request timing information
+- Error details with stack traces
+- Decoded track information
+- Server status updates
+
+## Request Configuration
+
+### Base Configuration
+```typescript
+const rest = new Rest({
+  url: 'localhost:2333',
+  auth: 'password',
+  secure: false,
+  timeout: 15000,
+  version: '4'
+});
+```
+
+### Using HTTPS
+```typescript
+const rest = new Rest({
+  url: 'example.com:2333',
+  auth: 'password',
+  secure: true // Use HTTPS
+});
+```
+
+### Custom Timeout
+```typescript
+const rest = new Rest({
+  url: 'localhost:2333',
+  auth: 'password',
+  timeout: 30000 // 30 seconds
+});
+```
+
+## Best Practices
+
+1. Handle rate limits gracefully:
+```typescript
+async function loadTrackWithRetry(identifier: string, maxRetries = 3) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await rest.loadTracks(identifier);
+    } catch (error) {
+      if (error.response?.status === 429) {
+        const retryAfter = error.response.headers['retry-after'];
+        await new Promise(r => setTimeout(r, retryAfter * 1000));
+        continue;
+      }
+      throw error;
+    }
+  }
+}
+```
+
+2. Process REST events properly:
+```typescript
+rest.processRestEvents(node, response);
+```
+
+3. Use timeouts appropriately:
+```typescript
+const rest = new Rest({
+  url: 'localhost:2333',
+  auth: 'password',
+  timeout: 15000 // Default
+});
+
+// For long operations
+rest.timeout = 30000;
+```

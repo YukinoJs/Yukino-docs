@@ -1,0 +1,199 @@
+.features {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+  width: 100%;
+  background-color: var(--ifm-background-surface-color);
+  position: relative;
+  overflow: hidden;
+}
+
+.featuresTitle {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--ifm-color-primary) 0%, var(--ifm-color-secondary) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+
+.featuresTitle.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.featureGrid {
+  width: 100%;
+  max-width: var(--ifm-container-width);
+  margin: 0 auto;
+  padding: 0 var(--ifm-spacing-horizontal);
+}
+
+.featureItem {
+  margin-bottom: 2.5rem;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  will-change: opacity, transform;
+}
+
+.featureItem.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.featureCard {
+  height: 100%;
+  padding: 1rem;
+  text-align: center;
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  background-color: var(--feature-card-bg);
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.featureCard:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.featureIcon {
+  font-size: 2rem;
+  margin-bottom: 0.7rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.3s ease;
+  will-change: transform;
+}
+
+.featureIcon svg {
+  width: 1.25em;
+  height: 1.25em;
+  transition: all 0.3s ease;
+}
+
+/* Individual icon colors - Light theme */
+.featureItem:nth-child(1) .featureIcon svg {
+  color: #FF4757;  /* Brighter red */
+}
+
+.featureItem:nth-child(2) .featureIcon svg {
+  color: #00C6B6;  /* Vivid cyan */
+}
+
+.featureItem:nth-child(3) .featureIcon svg {
+  color: #2E93FB;  /* Bright blue */
+}
+
+.featureItem:nth-child(4) .featureIcon svg {
+  color: #2ED573;  /* Fresh green */
+}
+
+.featureItem:nth-child(5) .featureIcon svg {
+  color: #007ACC;  /* Official TypeScript blue */
+}
+
+.featureItem:nth-child(6) .featureIcon svg {
+  color: #5865F2;  /* Official Discord color */
+}
+
+/* Dark theme colors - slightly lighter variants for better contrast */
+[data-theme='dark'] .featureItem:nth-child(1) .featureIcon svg {
+  color: #FF6B81;
+}
+
+[data-theme='dark'] .featureItem:nth-child(2) .featureIcon svg {
+  color: #00E6D3;
+}
+
+[data-theme='dark'] .featureItem:nth-child(3) .featureIcon svg {
+  color: #54A0FF;
+}
+
+[data-theme='dark'] .featureItem:nth-child(4) .featureIcon svg {
+  color: #7BED9F;
+}
+
+[data-theme='dark'] .featureItem:nth-child(5) .featureIcon svg {
+  color: #1E9CEF;
+}
+
+[data-theme='dark'] .featureItem:nth-child(6) .featureIcon svg {
+  color: #7289DA;
+}
+
+/* Gradient effect on hover */
+.featureCard:hover .featureIcon svg {
+  background: linear-gradient(135deg, var(--ifm-color-primary) 0%, var(--ifm-color-secondary) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 8px rgba(var(--ifm-color-primary-rgb), 0.3));
+}
+
+.featureCard:hover .featureIcon {
+  transform: scale(1.1);
+}
+
+.iconComponent {
+  width: 100%;
+  height: 100%;
+  font-size: 2.5em;
+  color: currentColor;
+}
+
+/* Dark mode adjustments */
+[data-theme='dark'] .features {
+  background-color: var(--ifm-background-color);
+}
+
+.features h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--ifm-color-primary);
+}
+
+.features p {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--ifm-color-emphasis-700);
+  margin-bottom: 0;
+}
+
+@media screen and (max-width: 996px) {
+  .features {
+    padding: 2rem 0;
+  }
+  
+  .featuresTitle {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .featureCard {
+    padding: 0.75rem;
+    max-width: 240px;
+  }
+
+  .featureIcon {
+    font-size: 1.75rem;
+  }
+  
+  .features {
+    padding: 2.5rem 0;
+  }
+}

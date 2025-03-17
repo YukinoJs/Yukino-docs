@@ -1,0 +1,147 @@
+# Voice State Management
+
+Learn how to handle voice state updates and manage voice connections in Yukino.
+
+## Understanding Voice State Flow
+
+```typescript
+// Voice state flow:
+// 1. Discord.js emits voice state/server updates
+// 2. Connector receives and processes updates
+// 3. Node handles voice connection
+// 4. Player manages voice state
+```
+
+## Core Voice Events
+
+```typescript
+// Basic voice state handling
+yukino.node.on('voiceStateUpdate', (state) => {
+  console.log('Voice state:', {
+    guildId: state.guild_id,
+    channelId: state.channel_id
+  });
+});
+
+// Handle disconnections
+yukino.node.on('voiceDisconnected', (player) => {
+  console.log(`Disconnected from voice in guild ${player.guildId}`);
+  // Optionally attempt reconnection
+  player.connect().catch(console.error);
+});
+
+// Handle WebSocket closure
+yukino.node.on('wsClosed', (player, data) => {
+  if (data?.code === 4006) {
+    // Session invalid - attempt reconnect
+    setTimeout(() => {
+      if (player?.options.voiceChannelId) {
+        player.connect().catch(console.error);
+      }
+    }, 2000);
+  }
+});
+```
+
+## Discord.js Integration
+
+Handle bot movements and disconnections:
+
+```typescript
+client.on("voiceStateUpdate", async (oldState, newState) => {
+  // Only handle bot events
+  if (oldState.member?.user.id !== client.user?.id) return;
+
+  const player = client.yukino.getPlayer(oldState.guild.id);
+  if (!player) return;
+
+  // Bot disconnected
+  if (oldState.channelId && !newState.channelId) {
+    if (player.playing) {
+      await player.connect().catch(() => player.destroy());
+    } else {
+      await player.destroy();
+    }
+  }
+  // Bot moved
+  else if (oldState.channelId !== newState.channelId) {
+    player.voiceChannelId = newState.channelId;
+  }
+});
+```
+
+## Auto-Management
+
+Simple auto-disconnect when channel is empty:
+
+```typescript
+class VoiceManager {
+  private timeouts = new Map<string, NodeJS.Timeout>();
+
+  constructor(private yukino: YukinoClient) {
+    this.setupEvents();
+  }
+
+  private setupEvents() {
+    yukino.connector.client.on('voiceStateUpdate', (oldState, newState) => {
+      const player = yukino.getPlayer(oldState.guild.id);
+      if (!player) return;
+
+      const channel = yukino.connector.client.channels.cache.get(
+        player.voiceChannelId
+      );
+      if (!channel) return;
+
+      // Check if channel is empty (excluding bot)
+      const members = channel.members.size - 1;
+      
+      if (members === 0) {
+        // Disconnect after 5 minutes if empty
+        this.timeouts.set(player.guildId, setTimeout(() => {
+          player.destroy();
+        }, 5 * 60 * 1000));
+      } else {
+        // Clear timeout if someone joins
+        const timeout = this.timeouts.get(player.guildId);
+        if (timeout) {
+          clearTimeout(timeout);
+          this.timeouts.delete(player.guildId);
+        }
+      }
+    });
+  }
+
+  destroy() {
+    this.timeouts.forEach(clearTimeout);
+    this.timeouts.clear();
+  }
+}
+```
+
+## Best Practices
+
+1. Enable auto-reconnect when creating players:
+```typescript
+const player = yukino.createPlayer({
+  guildId: 'guild-id',
+  voiceChannelId: 'channel-id',
+  autoReconnect: true  // Handles disconnections automatically
+});
+```
+
+2. Implement graceful cleanup:
+```typescript
+async function disconnect(player: Player) {
+  await player.stop();
+  await player.destroy();
+}
+```
+
+3. Monitor connection state:
+```typescript
+yukino.node.on('debug', (message) => {
+  if (message.includes('voice')) {
+    console.debug('[Voice]', message);
+  }
+});
+```

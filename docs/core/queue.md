@@ -1,0 +1,257 @@
+# Queue
+
+The Queue system in Yukino manages the order and playback sequence of tracks. It provides features for track management, shuffling, and repeat modes.
+
+## Queue Structure
+
+A queue in Yukino has these key components:
+- Current track
+- Track history
+- Upcoming tracks
+- Loop mode
+- Shuffle state
+
+## Basic Operations
+
+### Adding Tracks
+```typescript
+// Add a single track
+queue.add(track);
+
+// Add multiple tracks
+queue.addMany([track1, track2, track3]);
+
+// Add track at specific position
+queue.add(track, { position: 2 });
+
+// Add with options
+queue.add(track, {
+  position: 0,        // Position in queue
+  immediate: true,    // Play immediately
+  unshift: true      // Add to start of queue
+});
+```
+
+### Removing Tracks
+```typescript
+// Remove by position
+queue.remove(0);
+
+// Remove range
+queue.remove(0, 3); // Remove first 3 tracks
+
+// Remove by predicate
+queue.remove(track => track.info.length > 600000); // Remove tracks > 10min
+
+// Clear queue
+queue.clear();
+```
+
+## Queue Navigation
+
+### Track Access
+```typescript
+// Get current track
+const current = queue.current;
+
+// Get next track
+const next = queue.next;
+
+// Get previous track
+const previous = queue.previous;
+
+// Get track at position
+const track = queue.at(2);
+```
+
+### Queue Information
+```typescript
+// Get queue length
+console.log('Tracks in queue:', queue.length);
+
+// Get queue duration
+console.log('Total duration:', queue.duration);
+
+// Check if queue has tracks
+console.log('Has tracks:', queue.hasTrack);
+console.log('Is empty:', queue.isEmpty);
+```
+
+## Queue Manipulation
+
+### Reordering
+```typescript
+// Move track
+queue.move(0, 2); // Move first track to third position
+
+// Swap tracks
+queue.swap(1, 3); // Swap second and fourth tracks
+
+// Reverse queue
+queue.reverse();
+```
+
+### Shuffling
+```typescript
+// Shuffle entire queue
+queue.shuffle();
+
+// Shuffle range
+queue.shuffle(0, 5); // Shuffle first 5 tracks
+
+// Shuffle with options
+queue.shuffle(undefined, {
+  startFrom: 1,     // Start shuffling from second track
+  preserveFirst: true // Keep first track in place
+});
+```
+
+## Loop Modes
+
+### Setting Loop Mode
+```typescript
+// Set loop mode
+queue.setLoop('none');     // No looping
+queue.setLoop('track');    // Loop current track
+queue.setLoop('queue');    // Loop entire queue
+
+// Check current loop mode
+console.log('Loop mode:', queue.loop);
+```
+
+### Loop Behavior
+```typescript
+// Track loop example
+queue.on('trackEnd', () => {
+  if (queue.loop === 'track') {
+    // Current track will automatically replay
+    console.log('Replaying:', queue.current.info.title);
+  }
+});
+
+// Queue loop example
+queue.on('queueEnd', () => {
+  if (queue.loop === 'queue') {
+    // Queue will automatically restart
+    console.log('Restarting queue');
+  }
+});
+```
+
+## History Management
+
+### Track History
+```typescript
+// Get history
+const history = queue.history;
+
+// Get last played track
+const lastPlayed = queue.history.last;
+
+// Get specific track from history
+const trackFromHistory = queue.history.at(-2); // Second to last track
+
+// Clear history
+queue.history.clear();
+```
+
+### Navigation Through History
+```typescript
+// Go back to previous track
+queue.previous();
+
+// Go forward if available
+queue.next();
+
+// Check if navigation is possible
+console.log('Can go back:', queue.canGoBack);
+console.log('Can go forward:', queue.canGoForward);
+```
+
+## Advanced Features
+
+### Queue Filtering
+```typescript
+// Filter tracks
+const filtered = queue.filter(track => 
+  track.info.length < 300000 // Filter songs under 5 minutes
+);
+
+// Find tracks
+const found = queue.find(track => 
+  track.info.title.includes('keyword')
+);
+
+// Map tracks
+const titles = queue.map(track => track.info.title);
+```
+
+### Queue Events
+```typescript
+// Track added
+queue.on('trackAdd', (track, position) => {
+  console.log(`Added ${track.info.title} at position ${position}`);
+});
+
+// Track removed
+queue.on('trackRemove', (track, position) => {
+  console.log(`Removed ${track.info.title} from position ${position}`);
+});
+
+// Queue shuffled
+queue.on('shuffle', () => {
+  console.log('Queue has been shuffled');
+});
+```
+
+### State Management
+```typescript
+// Save queue state
+const state = queue.save();
+
+// Load queue state
+queue.load(state);
+
+// Reset queue
+queue.reset();
+```
+
+### Custom Sorting
+```typescript
+// Sort by duration
+queue.sort((a, b) => a.info.length - b.info.length);
+
+// Sort by title
+queue.sort((a, b) => a.info.title.localeCompare(b.info.title));
+
+// Sort with custom criteria
+queue.sort((a, b) => {
+  const weightA = getTrackWeight(a);
+  const weightB = getTrackWeight(b);
+  return weightA - weightB;
+});
+```
+
+## Performance Optimization
+
+### Batch Operations
+```typescript
+// Batch add tracks
+queue.transaction(() => {
+  tracks.forEach(track => queue.add(track));
+});
+
+// Batch remove tracks
+queue.transaction(() => {
+  tracksToRemove.forEach(track => queue.remove(track));
+});
+```
+
+### Memory Management
+```typescript
+// Trim history to save memory
+queue.history.trim(10); // Keep only last 10 tracks
+
+// Clear unused resources
+queue.cleanup();
+```

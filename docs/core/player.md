@@ -1,0 +1,278 @@
+# Player
+
+A Player in Yukino manages audio playback for a specific voice channel. It handles track playback, audio filtering, and voice connection state.
+
+## Creating a Player
+
+```typescript
+// Basic player creation
+const player = await yukino.createPlayer({
+  guildId: 'guild-id',
+  voiceChannelId: 'channel-id'
+});
+
+// Player with additional options
+const player = await yukino.createPlayer({
+  guildId: 'guild-id',
+  voiceChannelId: 'channel-id',
+  textChannelId: 'text-channel-id',
+  selfDeaf: true,
+  selfMute: false,
+  volume: 100
+});
+```
+
+## Playback Control
+
+### Basic Controls
+```typescript
+// Start playing
+await player.play();
+
+// Pause/Resume
+await player.pause();
+await player.resume();
+
+// Stop
+await player.stop();
+
+// Destroy (cleanup)
+await player.destroy();
+```
+
+### Track Management
+```typescript
+// Play specific track
+await player.play({ track: trackData });
+
+// Skip current track
+await player.skip();
+
+// Seek to position
+await player.seek(60000); // Seek to 1 minute
+
+// Set volume (0-1000)
+await player.setVolume(100);
+```
+
+### Playback Information
+```typescript
+// Get current track
+const track = player.current;
+console.log('Now playing:', track.info.title);
+
+// Get playback position
+const position = player.position;
+console.log('Current position:', position);
+
+// Get formatted position (human-readable time)
+const formattedPosition = player.getFormattedPosition();
+console.log('Current position formatted:', formattedPosition); // e.g. "1:45"
+
+// Check playback state
+console.log('Is playing:', player.playing);
+console.log('Is paused:', player.paused);
+```
+
+## Queue Management
+
+### Basic Queue Operations
+```typescript
+// Add tracks
+player.queue.add(track);
+player.queue.addMany([track1, track2]);
+
+// Remove tracks
+player.queue.remove(0);
+player.queue.clear();
+
+// Get queue information
+console.log('Queue length:', player.queue.length);
+console.log('Current track:', player.queue.current);
+console.log('Next track:', player.queue.next);
+```
+
+### Queue Manipulation
+```typescript
+// Shuffle queue
+player.queue.shuffle();
+
+// Move tracks
+player.queue.move(0, 2); // Move first track to third position
+
+// Filter tracks
+const filtered = player.queue.filter(track => 
+  track.info.length < 300000 // Filter songs under 5 minutes
+);
+```
+
+### Loop Modes
+```typescript
+// Set loop mode
+player.setLoop('none');    // No loop
+player.setLoop('track');   // Loop current track
+player.setLoop('queue');   // Loop entire queue
+
+// Check current loop mode
+console.log('Loop mode:', player.loop);
+```
+
+## Audio Effects
+
+### Volume Control
+```typescript
+// Set volume (0-1000)
+await player.setVolume(100);
+
+// Fade volume
+await player.fade({
+  from: 100,
+  to: 50,
+  duration: 5000 // 5 seconds
+});
+```
+
+### Filters
+```typescript
+// Apply single filter
+await player.setFilter('equalizer', [
+  { band: 0, gain: 0.3 },
+  { band: 1, gain: 0.2 }
+]);
+
+// Apply multiple filters
+await player.setFilters({
+  equalizer: [
+    { band: 0, gain: 0.3 },
+    { band: 1, gain: 0.2 }
+  ],
+  timescale: {
+    speed: 1.2,
+    pitch: 1.1,
+    rate: 1.0
+  },
+  tremolo: {
+    frequency: 2.0,
+    depth: 0.5
+  }
+});
+
+// Reset filters
+await player.resetFilter('equalizer');
+await player.resetFilters();
+```
+
+## Voice Connection
+
+### Voice State Management
+```typescript
+// Update voice state
+await player.updateVoice({
+  channelId: 'new-channel-id',
+  selfDeaf: true,
+  selfMute: false
+});
+
+// Disconnect from voice
+await player.disconnect();
+
+// Reconnect to voice
+await player.reconnect();
+```
+
+### Voice Events
+```typescript
+// Voice state update
+player.on('voiceStateUpdate', (state) => {
+  console.log('Voice state changed:', state);
+});
+
+// Voice disconnected
+player.on('voiceDisconnected', (reason) => {
+  console.log('Disconnected:', reason);
+});
+```
+
+## Event Handling
+
+### Playback Events
+```typescript
+// Track started
+player.on('trackStart', (track) => {
+  console.log('Now playing:', track.info.title);
+});
+
+// Track ended
+player.on('trackEnd', (track) => {
+  console.log('Finished playing:', track.info.title);
+});
+
+// Track stuck
+player.on('trackStuck', (track, thresholdMs) => {
+  console.warn(`Track stuck for ${thresholdMs}ms`);
+});
+
+// Track error
+player.on('trackError', (track, error) => {
+  console.error('Playback error:', error);
+});
+```
+
+### State Events
+```typescript
+// Player state update
+player.on('stateUpdate', (oldState, newState) => {
+  console.log('State changed from', oldState, 'to', newState);
+});
+
+// Player destroyed
+player.on('destroyed', () => {
+  console.log('Player cleaned up');
+});
+```
+
+## Advanced Usage
+
+### Custom Player Options
+```typescript
+// Create player with custom options
+const player = await yukino.createPlayer({
+  guildId: 'guild-id',
+  voiceChannelId: 'channel-id',
+  options: {
+    inactivityTimeout: 300000,  // 5 minutes
+    volumeDecrementer: 0.75,    // Reduce volume by 25%
+    bufferingTimeout: 5000      // 5 seconds buffer timeout
+  }
+});
+```
+
+### Playback Statistics
+```typescript
+// Get detailed stats
+const stats = player.stats;
+console.log('Frames sent:', stats.framesSent);
+console.log('Frames nulled:', stats.framesNulled);
+console.log('Frames deficit:', stats.framesDeficit);
+
+// Monitor frame stats
+player.on('stats', (stats) => {
+  if (stats.framesNulled > 100) {
+    console.warn('Poor connection quality');
+  }
+});
+```
+
+### Resource Management
+```typescript
+// Clean up resources
+await player.cleanup({
+  removeListeners: true,
+  destroyQueue: true
+});
+
+// Monitor resource usage
+player.on('debug', (message) => {
+  console.debug('[Player Debug]:', message);
+});
+```
