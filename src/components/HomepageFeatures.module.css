@@ -197,3 +197,20 @@
     padding: 2.5rem 0;
   }
 }
+
+/* Mobile menu enhancements */
+:global(.navbar-sidebar) {
+  background-color: var(--ifm-background-surface-color) !important;
+}
+
+:global(.navbar-sidebar__items) {
+  padding: 1rem !important;
+}
+
+:global(.navbar-sidebar__item) {
+  padding: 0.5rem !important;
+}
+
+:global(.navbar-sidebar__brand) {
+  border-bottom: 1px solid var(--ifm-color-emphasis-200) !important;
+}
