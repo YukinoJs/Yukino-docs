@@ -11,22 +11,14 @@ const config = {
   tagline: 'A Modern Lavalink Client for Discord.js',
   favicon: 'img/logo.png',
 
-  // Set the production url of your site here
-  url: 'http://localhost:3000',
-  // Set the /<baseUrl>/ pathname under which your site is served
-  // For GitHub pages deployment, it is often '/<projectName>/'
+  url: 'https://yukino.kwin.in',
   baseUrl: '/',
-
-  // GitHub pages deployment config.
   organizationName: 'yukino-org',
   projectName: 'yukino',
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
 
-  // Even if you don't use internalization, you can use this field to set useful
-  // metadata like html lang. For example, if your site is Chinese, you may want
-  // to replace "en" with "zh-Hans".
   i18n: {
     defaultLocale: 'en',
     locales: ['en'],
@@ -40,7 +32,7 @@ const config = {
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
           editUrl:
-            'https://github.com/Sanchit-codes/yukino-docs/tree/main/docs/',
+            'https://github.com/YukinoJs/yukino-docs/tree/main/docs/',
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
@@ -80,7 +72,7 @@ const config = {
             position: 'left'
           },
           {
-            href: 'https://github.com/Sanchit-codes/yukino',
+            href: 'https://github.com/YukinoJs/yukino',
             label: 'GitHub',
             position: 'right',
           },
@@ -120,7 +112,7 @@ const config = {
               },
               {
                 label: 'GitHub Discussions',
-                href: 'https://github.com/Sanchit-codes/yukino/discussions',
+                href: 'https://github.com/YukinoJs/yukino/discussions',
               },
             ],
           },
@@ -129,11 +121,11 @@ const config = {
             items: [
               {
                 label: 'GitHub',
-                href: 'https://github.com/yukino-org/yukino',
+                href: 'https://github.com/YukinoJs/yukino',
               },
               {
                 label: 'npm',
-                href: 'https://www.npmjs.com/package/yukino',
+                href: 'https://www.npmjs.com/package/yukinojs',
               },
             ],
           },
@@ -153,7 +145,7 @@ const config = {
       announcementBar: {
         id: 'support_us',
         content:
-          '⭐ If you like Yukino, give it a star on <a target="_blank" rel="noopener noreferrer" href="https://github.com/Sanchit-codes/yukino">GitHub</a>!',
+          '⭐ If you like Yukino, give it a star on <a target="_blank" rel="noopener noreferrer" href="https://github.com/YukinoJs/yukino">GitHub</a>!',
         backgroundColor: '#20232a',
         textColor: '#fff',
         isCloseable: true,

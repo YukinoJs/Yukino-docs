@@ -66,7 +66,7 @@ function HomepageHeader() {
 }
 
 const codeExample = `import { Client, GatewayIntentBits } from 'discord.js';
-import { YukinoClient } from 'yukino';
+import { YukinoClient } from 'yukinojs';
 
 // Create Discord.js client with required intents
 const client = new Client({
