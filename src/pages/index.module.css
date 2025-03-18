@@ -323,7 +323,7 @@
   margin: 0 auto;
   padding: 0 var(--ifm-spacing-horizontal);
   position: relative;
-  z-index: 2;
+  z-index: 3;
 }
 
 .ctaSection::before {
