@@ -8,7 +8,7 @@ const darkCodeTheme = themes.dracula;
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'Yukino',
-  tagline: 'A Modern Lavalink Client for Discord.js',
+  tagline: 'Kawaii lavalink client written in TypeScript!',
   favicon: 'img/logo.png',
 
   url: 'https://yukino.kwin.in',
