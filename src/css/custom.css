@@ -170,9 +170,9 @@ body {
 }
 
 .button.button--secondary {
-  color: rgb(155, 155, 155);
+  color: white;
   border-color: white;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .button.button--secondary:hover {
@@ -217,8 +217,8 @@ body {
 /* Enhanced navbar */
 .navbar {
   box-shadow: var(--ifm-navbar-shadow);
-  backdrop-filter: blur(10px);
   background-color: rgba(255, 255, 255, 0.8);
+  z-index: 100;
 }
 
 [data-theme='dark'] .navbar {
@@ -236,6 +236,13 @@ body {
 
 .navbar__logo:hover {
   transform: scale(1.1);
+}
+
+@media (min-width: 1000px) {
+  nav.navbar.navbar--fixed-top {
+    backdrop-filter: blur(25px);
+    background: var(--ifm-top-menu-color);
+  }
 }
 
 /* Cards */
@@ -376,213 +383,6 @@ table th, table td {
   
   .quick-example {
     margin-top: 2rem;
-  }
-
-  /* Mobile sidebar fixes */
-  .navbar-sidebar {
-    background-color: var(--ifm-background-surface-color);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  }
-
-  .navbar-sidebar__brand {
-    box-shadow: none;
-    border-bottom: 1px solid var(--ifm-color-emphasis-200);
-  }
-
-  .navbar-sidebar__items {
-    padding: 0.75rem;
-  }
-
-  .navbar-sidebar__item {
-    padding: 0.5rem;
-  }
-
-  .navbar-sidebar__item .menu__link {
-    color: var(--ifm-font-color-base);
-    font-weight: 500;
-    padding: 0.75rem 1rem;
-    border-radius: var(--ifm-global-radius);
-  }
-
-  .navbar-sidebar__item .menu__link:hover {
-    background-color: var(--ifm-color-emphasis-200);
-    text-decoration: none;
-  }
-
-  .navbar-sidebar__item .menu__link--active {
-    background-color: rgba(6, 182, 212, 0.1);
-    color: var(--ifm-color-primary);
-    font-weight: 600;
-  }
-
-  .navbar-sidebar__item .menu__list {
-    margin-left: 0.5rem;
-    padding-left: 1rem;
-    border-left: 1px solid var(--ifm-color-emphasis-200);
-  }
-
-  .navbar-sidebar__item .menu__list-item {
-    margin: 0.25rem 0;
-  }
-
-  .navbar-sidebar .navbar__link {
-    color: var(--ifm-font-color-base);
-    display: block;
-    padding: 0.75rem 1rem;
-    border-radius: var(--ifm-global-radius);
-    margin: 0.25rem 0;
-  }
-
-  .navbar-sidebar .navbar__link:hover {
-    background-color: var(--ifm-color-emphasis-200);
-    text-decoration: none;
-  }
-
-  .navbar-sidebar .navbar__link--active {
-    color: var(--ifm-color-primary);
-    font-weight: 600;
-  }
-
-  .navbar-sidebar .dropdown__link {
-    color: var(--ifm-font-color-base);
-    padding: 0.75rem 1rem;
-  }
-  
-  .navbar-sidebar .dropdown__menu {
-    box-shadow: none;
-    background-color: transparent;
-    border: none;
-    padding: 0;
-    margin: 0;
-    margin-left: 1rem;
-  }
-
-  .navbar-sidebar .dropdown__link:hover {
-    background-color: var(--ifm-color-emphasis-200);
-  }
-
-  .navbar-sidebar .clean-btn {
-    color: var(--ifm-font-color-base);
-  }
-  
-  /* Fix collapsible categories in sidebar */
-  .menu__list-item--collapsed .menu__list {
-    height: 0;
-    overflow: hidden;
-  }
-
-  .menu__list-item-collapsible {
-    border-radius: var(--ifm-global-radius);
-  }
-
-  .menu__list-item-collapsible:hover {
-    background-color: var(--ifm-color-emphasis-200);
-  }
-
-  .menu__link--sublist-caret:after {
-    content: "";
-    margin-left: auto;
-    min-width: 1.25rem;
-    background: var(--ifm-menu-link-sublist-icon) 50% / 1.25rem 1.25rem;
-    filter: var(--ifm-menu-link-sublist-icon-filter);
-    height: 1.25rem;
-    transform: rotate(180deg);
-    transition: transform var(--ifm-transition-fast) linear;
-  }
-
-  .menu__list-item--collapsed .menu__link--sublist-caret:after {
-    transform: rotate(90deg);
-  }
-
-  .theme-doc-sidebar-container {
-    margin-bottom: 0;
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-  
-  .theme-doc-sidebar-menu {
-    font-size: 0.95rem !important;
-  }
-  
-  .menu__link {
-    padding: 0.75rem 0.75rem !important;
-    border-radius: var(--ifm-global-radius);
-  }
-  
-  .menu__list {
-    margin-bottom: 0.5rem !important;
-  }
-
-  .theme-doc-sidebar-menu .menu__link--active {
-    background-color: rgba(6, 182, 212, 0.1) !important;
-    color: var(--ifm-color-primary) !important;
-    font-weight: 600 !important;
-  }
-
-  .menu__list-item-collapsible {
-    margin-top: 0.25rem !important;
-    margin-bottom: 0.25rem !important;
-  }
-  
-  .menu__list-item-collapsible .menu__link {
-    font-weight: 500 !important;
-  }
-  
-  /* Make collapsible menu section headers more visible */
-  .menu__list-item-collapsible--active {
-    background-color: rgba(6, 182, 212, 0.05) !important;
-  }
-  
-  [data-theme='dark'] .menu__list-item-collapsible--active {
-    background-color: rgba(34, 211, 238, 0.05) !important;
-  }
-  
-  .menu__list .menu__list {
-    margin-left: 0.75rem !important;
-    padding-left: 0.75rem !important;
-    border-left: 1px solid var(--ifm-color-emphasis-200) !important;
-  }
-
-  .navbar.navbar--fixed-top {
-    position: fixed;
-    width: 100%;
-    z-index: 30;
-  }
-
-  /* Fix mobile sidebar positioning relative to fixed navbar */
-  .navbar-sidebar {
-    position: fixed;
-    top: var(--ifm-navbar-height);
-    bottom: 0;
-    width: 80%;
-    max-width: 300px;
-    z-index: 25;
-    overflow-y: auto;
-    transform: translateX(0);
-    transition: transform 0.3s ease;
-    will-change: transform;
-  }
-
-  /* Menu positioning */
-  .navbar-sidebar__items {
-    padding: 0.5rem;
-    height: 100%;
-  }
-
-  /* Fix for menu items to ensure they're visible */
-  .navbar-sidebar__items .menu {
-    overflow-y: visible !important;
-    max-height: none !important;
-  }
-
-  /* Fix main content position when sidebar is open */
-  html[data-navbar-sidebar-shown] body {
-    overflow: hidden;
-  }
-
-  /* Ensure content doesn't overlap with navbar */
-  .main-wrapper {
-    margin-top: var(--ifm-navbar-height);
   }
 }
 
