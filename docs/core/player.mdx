@@ -210,71 +210,7 @@ console.log('Loop mode:', player.loop);
 
 ## Audio Effects
 
-### Volume Control
-```typescript
-// Set volume (0-1000)
-await player.setVolume(100);
-
-// Fade volume
-await player.fade({
-  from: 100,
-  to: 50,
-  duration: 5000 // 5 seconds
-});
-```
-
-### Filters
-```typescript
-// Apply single filter
-await player.setFilter('equalizer', [
-  { band: 0, gain: 0.3 },
-  { band: 1, gain: 0.2 }
-]);
-
-// Apply multiple filters
-await player.setFilters({
-  equalizer: [
-    { band: 0, gain: 0.3 },
-    { band: 1, gain: 0.2 }
-  ],
-  timescale: {
-    speed: 1.2,
-    pitch: 1.1,
-    rate: 1.0
-  },
-  tremolo: {
-    frequency: 2.0,
-    depth: 0.5
-  }
-});
-
-// Reset filters
-await player.resetFilter('equalizer');
-await player.resetFilters();
-```
-
-### More Filter Examples
-You can use additional built-in filters with `FilterUtil`:
-
-```typescript
-// Vibrato filter
-await player.setFilters(FilterUtil.vibrato({ frequency: 5, depth: 0.7 }));
-
-// Tremolo filter
-await player.setFilters(FilterUtil.tremolo({ frequency: 4, depth: 0.5 }));
-
-// Rotation filter (8D audio effect)
-await player.setFilters(FilterUtil.rotation({ rotationHz: 0.2 }));
-
-// Distortion filter
-await player.setFilters(FilterUtil.distortion({ sinOffset: 0.5, sinScale: 0.5 }));
-
-// Channel mix filter
-await player.setFilters(FilterUtil.channelMix({ leftToLeft: 0.5, rightToRight: 0.5 }));
-
-// Low pass filter
-await player.setFilters(FilterUtil.lowPass({ smoothing: 10 }));
-```
+> Audio effects and filter documentation has been moved. See [Audio Effects & Filters](../features/filters.mdx) for all usage, API, and best practices.
 
 ## Voice Connection
 
