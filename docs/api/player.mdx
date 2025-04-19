@@ -1,0 +1,115 @@
+# Player & Queue
+
+The `Player` and `Queue` classes provide playback and track management for Yukino. Below are their APIs and usage examples.
+
+## Player API
+
+### Constructor
+
+```typescript
+// Usually created via YukinoClient.createPlayer(options)
+```
+
+---
+
+## Methods
+
+### Playback Control
+
+| Method         | Description         | Example                  |
+|---------------|---------------------|--------------------------|
+| `play()`      | Start playback      | `player.play()`          |
+| `pause()`     | Pause playback      | `player.pause()`         |
+| `resume()`    | Resume playback     | `player.resume()`        |
+| `stop()`      | Stop playback       | `player.stop()`          |
+| `destroy()`   | Clean up player     | `player.destroy()`       |
+
+### Track Management
+
+| Method                | Description                | Example                                         |
+|-----------------------|----------------------------|-------------------------------------------------|
+| `skip()`              | Skip to next track         | `player.skip()`                                 |
+| `seek(position)`      | Jump to position (ms)      | `player.seek(60000)`                            |
+| `setVolume(volume)`   | Set volume (0-1000)        | `player.setVolume(100)`                         |
+| `fade({from, to, duration})` | Fade volume over time | `player.fade({from: 100, to: 50, duration: 5000})` |
+
+### Loop Control
+
+| Method/Property   | Description           | Example                        |
+|-------------------|----------------------|--------------------------------|
+| `setLoop(mode)`   | Set loop mode        | `player.setLoop('track')`      |
+| `loop`            | Get current loop mode| `console.log(player.loop)`     |
+
+### Filters & Effects
+
+| Method                | Description                | Example                                         |
+|-----------------------|----------------------------|-------------------------------------------------|
+| `setFilter(name, options)` | Apply single filter    | `player.setFilter('equalizer', [...])`          |
+| `setFilters(filtersObj)`   | Apply multiple filters  | `player.setFilters({...})`                      |
+| `resetFilter(name)`        | Remove specific filter  | `player.resetFilter('equalizer')`               |
+| `resetFilters()`           | Remove all filters      | `player.resetFilters()`                         |
+
+### Voice Connection
+
+| Method                | Description                | Example                                         |
+|-----------------------|----------------------------|-------------------------------------------------|
+| `updateVoice(options)`| Change voice settings      | `player.updateVoice({...})`                     |
+| `reconnect()`         | Reconnect to voice         | `player.reconnect()`                            |
+
+### Status & Events
+
+| Method/Property       | Description                | Example                                         |
+|-----------------------|----------------------------|-------------------------------------------------|
+| `stats`               | Get playback statistics    | `const stats = player.stats`                    |
+| `on(event, callback)` | Register event handler     | `player.on('trackStart', (track) => {...})`     |
+| `cleanup(options)`    | Resource management        | `player.cleanup({...})`                         |
+
+---
+
+## Queue API
+
+### Methods
+
+#### Adding/Removing Tracks
+
+| Method                | Description                | Example                                         |
+|-----------------------|----------------------------|-------------------------------------------------|
+| `add(track)`          | Add single track           | `player.queue.add(track)`                       |
+| `addMany(tracks)`     | Add multiple tracks        | `player.queue.addMany([track1, track2])`        |
+| `remove(index)`       | Remove track by index      | `player.queue.remove(0)`                        |
+| `clear()`             | Clear entire queue         | `player.queue.clear()`                          |
+
+#### Queue Manipulation
+
+| Method                | Description                | Example                                         |
+|-----------------------|----------------------------|-------------------------------------------------|
+| `shuffle()`           | Randomize queue order      | `player.queue.shuffle()`                        |
+| `move(from, to)`      | Move track position        | `player.queue.move(0, 2)`                       |
+| `filter(predicate)`   | Filter tracks              | `player.queue.filter(track => track.info.length < 300000)` |
+
+#### Queue Information
+
+| Property/Method       | Description                | Example                                         |
+|-----------------------|----------------------------|-------------------------------------------------|
+| `length`              | Number of tracks           | `console.log(player.queue.length)`              |
+| `current`             | Currently playing track    | `const track = player.queue.current`            |
+| `next()`              | Get & remove next track    | `const nextTrack = player.queue.next()`         |
+| `nextTrack`           | Get next track (no removal)| `const upcoming = player.queue.nextTrack`       |
+
+> **Note:** `queue.next()` removes and returns the next track. `queue.nextTrack` returns the next track without removing it.
+
+---
+
+## Example Usage
+
+```typescript
+const player = yukino.createPlayer({
+  guildId: 'guild-id',
+  voiceChannelId: 'channel-id',
+  textChannelId: 'text-channel-id'
+});
+
+player.play();
+player.queue.add(track);
+player.setVolume(100);
+```

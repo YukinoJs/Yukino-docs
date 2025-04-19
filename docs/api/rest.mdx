@@ -1,6 +1,6 @@
 # REST API
 
-The `Rest` class handles HTTP communication with the Lavalink server. It provides methods for track loading, player management, and server information.
+The `Rest` class handles HTTP communication with the Lavalink server. It provides methods for track loading, player management, session management, and server information.
 
 ## Constructor
 
@@ -19,8 +19,8 @@ const rest = new Rest({
 
 ## Track Loading
 
-### `loadTracks(identifier: string)`
-Load tracks from URLs or search queries.
+### `loadTracks(identifier: string, source?: string)`
+Load tracks from URLs or search queries. Optionally specify a search source (default: 'ytsearch').
 
 ```typescript
 // Load from URL
@@ -29,25 +29,24 @@ const result = await rest.loadTracks('https://youtube.com/watch?v=...');
 // Search YouTube
 const searchResult = await rest.loadTracks('ytsearch:your search query');
 
+// Specify a custom source
+const scResult = await rest.loadTracks('your search', 'scsearch');
+
 // Handle different result types
 switch (result.loadType) {
   case 'track':
     console.log('Single track:', result.data[0].info.title);
     break;
-    
   case 'playlist':
     console.log('Playlist:', result.playlistInfo?.name);
     console.log('Track count:', result.data?.length);
     break;
-    
   case 'search':
     console.log('Search results:', result.data?.length);
     break;
-    
   case 'empty':
     console.log('No matches found');
     break;
-    
   case 'error':
     console.error('Error:', result.exception?.message);
     break;
@@ -111,9 +110,27 @@ Destroy a player instance.
 await rest.destroyPlayer('session-id', 'guild-id');
 ```
 
+### `destroyAllPlayers(sessionId: string)`
+Destroy all players for a session.
+
+```typescript
+await rest.destroyAllPlayers('session-id');
+```
+
+### `updateVoiceServer(sessionId: string, guildId: string, voiceUpdate: { token: string; endpoint: string; sessionId: string })`
+Update the voice server data for a guild.
+
+```typescript
+await rest.updateVoiceServer('session-id', 'guild-id', {
+  token: 'voice-token',
+  endpoint: 'voice-endpoint',
+  sessionId: 'voice-session-id'
+});
+```
+
 ## Session Management
 
-### `updateSession(sessionId: string, resumeKey: string, timeout: number)`
+### `updateSession(sessionId: string, resumeKey: string, timeout?: number)`
 Update session configuration for resuming.
 
 ```typescript
@@ -167,9 +184,19 @@ console.log('CPU Usage:', stats.cpu.systemLoad);
 console.log('Memory Used:', stats.memory.used);
 ```
 
+## Generic HTTP Methods
+
+The Rest class also provides generic HTTP methods for advanced use:
+
+- `get<T>(url: string, customHeaders?)`
+- `post<T>(url: string, data?, customHeaders?)`
+- `patch<T>(url: string, data?, customHeaders?)`
+- `delete<T>(url: string, customHeaders?)`
+- `request<T>(endpoint: string, method = 'GET', body?, customHeaders?)`
+
 ## Error Handling
 
-The REST client includes comprehensive error handling:
+The REST client includes comprehensive error handling for all HTTP methods:
 
 ```typescript
 try {

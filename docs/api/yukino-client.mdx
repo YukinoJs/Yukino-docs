@@ -1,26 +1,28 @@
 # YukinoClient API
 
-The `YukinoClient` class is the main entry point for interacting with Yukino. It integrates with Discord.js and manages connections to Lavalink.
+The `YukinoClient` class is the main entry point for interacting with Yukino. It integrates with Discord.js and manages connections to one or more Lavalink nodes.
+
+See the [Types Reference](./types) for enums, interfaces, and advanced type definitions used throughout Yukino.
 
 ## Constructor
 
 ```typescript
-constructor(client: Client, options: ConnectorOptions, nodeOptions: NodeOptions)
+constructor(client: Client, options: ConnectorOptions, nodeOptions: NodeOptions | NodeOptions[])
 ```
 
 ### Parameters
 
 - `client`: Discord.js Client instance
-- `options`: [ConnectorOptions](#connector-options) for configuring the connection
-- `nodeOptions`: [NodeOptions](#node-options) for configuring the Lavalink node
+- `options`: [ConnectorOptions](./types#connectoroptions) for configuring the connection
+- `nodeOptions`: [NodeOptions](./types#nodeoptions) or `NodeOptions[]` for configuring one or more Lavalink nodes
 
-### Example
+### Example (Single Node)
 
 ```typescript
 import { Client } from 'discord.js';
 import { YukinoClient } from 'yukinojs';
 
-const client = new Client({...});
+const client = new Client({/* ... */});
 const yukino = new YukinoClient(client, {
   client,
   auth: 'your-password',
@@ -32,109 +34,114 @@ const yukino = new YukinoClient(client, {
 });
 ```
 
+### Example (Multiple Nodes)
+
+```typescript
+const yukino = new YukinoClient(client, connectorOptions, [
+  { name: 'main', url: 'localhost:2333', auth: 'your-password' },
+  { name: 'backup', url: 'localhost:2444', auth: 'your-password' }
+]);
+```
+
 ## Properties
 
 ### `connector`
 - Type: `Connector`
 - Description: The connector instance used for voice state management
 
-### `node`
-- Type: `Node`
-- Description: The Lavalink node instance
+### `nodeManager`
+- Type: `NodeManager`
+- Description: The manager for all Lavalink nodes
+
+### `playerManager`
+- Type: `PlayerManager`
+- Description: The manager for all players
 
 ### `players`
 - Type: `Map<string, Player>`
-- Description: Map of all active players, keyed by guild ID
-- Read-only
+- Description: Map of all active players, keyed by guild ID (Read-only)
+
+### `nodes`
+- Type: `Map<string, Node>`
+- Description: Map of all Lavalink nodes (Read-only)
+
+### `idealNode`
+- Type: `Node | undefined`
+- Description: The ideal node for load balancing (Read-only)
 
 ### `isReady`
 - Type: `boolean`
-- Description: Whether the Lavalink node is connected and ready
-- Read-only
+- Description: Whether any Lavalink node is connected and ready (Read-only)
 
 ## Methods
 
 ### `connect()`
 - Returns: `void`
-- Description: Connects to the Lavalink node
+- Description: Connects to all configured Lavalink nodes
 
-```typescript
-yukino.connect();
-```
+### `addNode(options: NodeOptions)`
+- Returns: `Node`
+- Description: Adds a single Lavalink node
+
+### `addNodes(optionsArray: NodeOptions[])`
+- Returns: `Node[]`
+- Description: Adds multiple Lavalink nodes
+
+### `setNodeSelector(fn: (nodes: Node[], guildId?: string) => Node | undefined)`
+- Returns: `void`
+- Description: Sets a custom node selection function for load balancing
 
 ### `createPlayer(options: PlayerOptions)`
 - Returns: `Player`
-- Description: Creates a new player for a guild
-- Throws: Error if node is not ready
-
-```typescript
-const player = yukino.createPlayer({
-  guildId: 'guild-id',
-  voiceChannelId: 'channel-id',
-  textChannelId: 'text-channel-id'
-});
-```
+- Description: Creates a new player for a guild. Throws if no node is ready.
 
 ### `getPlayer(guildId: string)`
 - Returns: `Player | undefined`
 - Description: Gets an existing player for a guild
 
-```typescript
-const player = yukino.getPlayer('guild-id');
-if (player) {
-  await player.play({...});
-}
-```
+### `hasPlayer(guildId: string)`
+- Returns: `boolean`
+- Description: Checks if a guild has a player
 
 ### `getQueue(guildId: string)`
 - Returns: `Queue | undefined`
 - Description: Gets the queue for a guild's player
 
-```typescript
-const queue = yukino.getQueue('guild-id');
-if (queue) {
-  console.log('Queue size:', queue.size);
-}
-```
-
-### `loadTrack(query: string)`
+### `loadTrack(query: string, options?: SearchOptions)`
 - Returns: `Promise<LoadTrackResponse>`
 - Description: Loads a track or playlist from a URL or search query
 
-```typescript
-const result = await yukino.loadTrack('https://youtube.com/watch?v=...');
-if (result.loadType === 'track') {
-  await player.play({ track: result.data[0] });
-}
-```
+### `destroyPlayer(guildId: string)`
+- Returns: `Promise<boolean>`
+- Description: Destroys a specific player by guild ID
+
+### `destroyAllPlayers()`
+- Returns: `Promise<number>`
+- Description: Destroys all players
+
+### `getLavaStats()`
+- Returns: `LavalinkStats`
+- Description: Gets statistics for all Lavalink nodes
 
 ### `destroy()`
 - Returns: `void`
-- Description: Destroys all players and disconnects from Lavalink
-
-```typescript
-yukino.destroy();
-```
+- Description: Destroys all players and disconnects from all nodes
 
 ## Events
 
-Events are emitted through the node instance:
+Events are emitted through the node manager and player manager. Example:
 
 ```typescript
-yukino.node.on('nodeReady', () => {
-  console.log('Connected to Lavalink!');
+yukino.nodeManager.on('nodeReady', (node) => {
+  console.log(`Connected to Lavalink node: ${node.options.name}`);
 });
 
-yukino.node.on('trackStart', (player, track) => {
+yukino.playerManager.on('trackStart', (player, track) => {
   console.log(`Now playing: ${track.info.title}`);
-});
-
-yukino.node.on('trackEnd', (player, track, reason) => {
-  console.log(`Track ended: ${track.info.title}`);
 });
 ```
 
-See [Node Events](../core/node.mdx#events) for a complete list of events.
+See [Node Events](../core/node.mdx#events) and [Player Events](../core/player.mdx#events) for a complete list.
 
 ## Type Definitions
 
@@ -215,3 +222,4 @@ const yukino = new YukinoClient(client, {
   url: 'localhost:2333',
   auth: 'password'
 });
+```

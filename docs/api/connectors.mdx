@@ -6,11 +6,19 @@ Connectors handle the integration between Yukino and Discord client libraries. T
 
 The `Connector` class is the base class for platform-specific implementations.
 
+### Constructor Requirements
+
+- The constructor requires a `sessionId` (typically the bot's user ID), which is used to set the `clientId` property.
+- Either `url` or `host` (and optionally `port`) must be provided.
+- `auth` is required for Lavalink authentication.
+- Optionally, `restOptions` can be provided for custom REST configuration.
+- On instantiation, if no nodes exist, a default node is created using the provided connection options.
+
 ### Properties
 
 ```typescript
 abstract class Connector extends EventEmitter {
-  public clientId: string;
+  public clientId: string; // Set from sessionId (usually bot's user ID)
   public nodes: Map<string, Node>;
   public voiceStates: Map<string, any>;
   public voiceServers: Map<string, any>;
@@ -20,8 +28,8 @@ abstract class Connector extends EventEmitter {
 
 ### Methods
 
-#### `createNode(options: NodeOptions)`
-Creates a new Lavalink node instance.
+#### `createNode(options: NodeOptions, restOptions?: RestOptions)`
+Creates a new Lavalink node instance. If a node with the same name exists, returns the existing instance. Optionally accepts custom REST options.
 ```typescript
 const node = connector.createNode({
   name: 'main',
@@ -31,10 +39,7 @@ const node = connector.createNode({
 ```
 
 #### `destroyNode(node: Node)`
-Destroys and removes a node instance.
-```typescript
-connector.destroyNode(node);
-```
+Destroys and removes a node instance. (Note: This method is not implemented in the base class; use the node's `disconnect()` method and remove it from the map.)
 
 #### `createPlayer(options: PlayerOptions)`
 Creates a new player instance.
@@ -46,16 +51,16 @@ const player = connector.createPlayer({
 ```
 
 #### `destroyPlayer(player: Player)`
-Destroys and cleans up a player instance.
-```typescript
-await connector.destroyPlayer(player);
-```
+Destroys and cleans up a player instance. (Note: This method is not implemented in the base class; use the player's `destroy()` method.)
 
-#### `loadTrack(query: string)`
+#### `loadTrack(query: string, options?: SearchOptions)`
 Loads a track from a URL or search query.
 ```typescript
 const result = await connector.loadTrack('search query');
 ```
+
+#### `sendVoiceUpdate(guildId: string, channelId: string | null, mute?: boolean, deaf?: boolean)`
+Base implementation only emits an event (`sendVoiceUpdate`). Platform-specific connectors should override this to actually send the payload to Discord.
 
 ## DiscordJSConnector
 
@@ -67,31 +72,28 @@ import { Client } from 'discord.js';
 import { DiscordJSConnector } from 'yukino';
 
 const connector = new DiscordJSConnector({
-  client: client,
+  client: client, // Must be a logged-in Discord.js Client
   auth: 'password',
   debug: true
 });
 ```
+- The `client` must be logged in; `sessionId` is set from `client.user.id` automatically.
 
 ### Voice State Management
 
-The connector automatically handles voice state and server updates from Discord:
+The connector automatically handles voice state and server updates from Discord by listening to the `raw` event:
 
 ```typescript
-// These are handled internally
-client.on('voiceStateUpdate', (oldState, newState) => {
-  connector.handleVoiceStateUpdate(newState);
-});
-
-client.on('voiceServerUpdate', (data) => {
-  connector.handleVoiceServerUpdate(data);
+// Handled internally via the 'raw' event
+client.on('raw', (packet) => {
+  // ...handled by DiscordJSConnector...
 });
 ```
 
 ### Voice Connection
 
 #### `sendVoiceUpdate(guildId: string, channelId: string | null, mute?: boolean, deaf?: boolean)`
-Sends voice state updates to Discord.
+Sends voice state updates to Discord by sending a payload via the Discord.js WebSocket shard. This method is asynchronous.
 ```typescript
 // Join a voice channel
 await connector.sendVoiceUpdate('guild-id', 'channel-id', false, false);
@@ -238,3 +240,4 @@ class DebugConnector extends Connector {
     super.onVoiceStateUpdate(data);
   }
 }
+```
