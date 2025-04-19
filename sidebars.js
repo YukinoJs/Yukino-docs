@@ -18,7 +18,6 @@ const sidebars = {
         'core/node',
         'core/player',
         'core/queue',
-        'core/logger',
       ],
     },
     {
@@ -26,7 +25,8 @@ const sidebars = {
       label: 'Features',
       items: [
         'features/filters',
-        'features/effects',
+        'features/logger',
+        'features/utils',
       ],
     },
     {
@@ -49,6 +49,7 @@ const sidebars = {
         // 'api/queue',
         'api/rest',
         'api/connectors',
+        'api/player',
         'api/types',
       ],
     },
