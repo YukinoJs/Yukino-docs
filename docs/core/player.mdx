@@ -2,6 +2,93 @@
 
 A Player in Yukino manages audio playback for a specific voice channel. It handles track playback, audio filtering, and voice connection state.
 
+---
+
+## Player & Queue API Quick Reference
+
+### Player API
+
+<div className="player-api-sections">
+
+#### 🎮 Playback Control
+| Method | Description | Example |
+|--------|-------------|---------|
+| `play()` | Start playback | `player.play()` |
+| `pause()` | Pause playback | `player.pause()` |
+| `resume()` | Resume playback | `player.resume()` |
+| `stop()` | Stop playback | `player.stop()` |
+| `destroy()` | Clean up player | `player.destroy()` |
+
+#### 🎵 Track Management
+| Method | Description | Example |
+|--------|-------------|---------|
+| `skip()` | Skip to next track | `player.skip()` |
+| `seek(position)` | Jump to position (ms) | `player.seek(60000)` |
+| `setVolume(volume)` | Set volume (0-1000) | `player.setVolume(100)` |
+| `fade({from, to, duration})` | Fade volume over time | `player.fade({from: 100, to: 50, duration: 5000})` |
+
+#### 🔄 Loop Control
+| Method/Property | Description | Example |
+|-----------------|-------------|---------|
+| `setLoop(mode)` | Set loop mode | `player.setLoop('track')` |
+| `loop` | Get current loop mode | `console.log(player.loop)` |
+
+#### 🎚️ Filters & Effects
+| Method | Description | Example |
+|--------|-------------|---------|
+| `setFilter(name, options)` | Apply single filter | `player.setFilter('equalizer', [...])` |
+| `setFilters(filtersObj)` | Apply multiple filters | `player.setFilters({...})` |
+| `resetFilter(name)` | Remove specific filter | `player.resetFilter('equalizer')` |
+| `resetFilters()` | Remove all filters | `player.resetFilters()` |
+
+#### 🔊 Voice Connection
+| Method | Description | Example |
+|--------|-------------|---------|
+| `updateVoice(options)` | Change voice settings | `player.updateVoice({...})` |
+| `reconnect()` | Reconnect to voice | `player.reconnect()` |
+
+#### 📊 Status & Events
+| Method/Property | Description | Example |
+|-----------------|-------------|---------|
+| `stats` | Get playback statistics | `const stats = player.stats` |
+| `on(event, callback)` | Register event handler | `player.on('trackStart', (track) => {...})` |
+| `cleanup(options)` | Resource management | `player.cleanup({...})` |
+
+</div>
+
+### Queue API
+
+<div className="queue-api-sections">
+
+#### ➕ Adding/Removing Tracks
+| Method | Description | Example |
+|--------|-------------|---------|
+| `add(track)` | Add single track | `player.queue.add(track)` |
+| `addMany(tracks)` | Add multiple tracks | `player.queue.addMany([track1, track2])` |
+| `remove(index)` | Remove track by index | `player.queue.remove(0)` |
+| `clear()` | Clear entire queue | `player.queue.clear()` |
+
+#### 🔀 Queue Manipulation
+| Method | Description | Example |
+|--------|-------------|---------|
+| `shuffle()` | Randomize queue order | `player.queue.shuffle()` |
+| `move(from, to)` | Move track position | `player.queue.move(0, 2)` |
+| `filter(predicate)` | Filter tracks | `player.queue.filter(track => track.info.length < 300000)` |
+
+#### 📋 Queue Information
+| Property/Method | Description | Example |
+|-----------------|-------------|---------|
+| `length` | Number of tracks | `console.log(player.queue.length)` |
+| `current` | Currently playing track | `const track = player.queue.current` |
+| `next()` | Get & remove next track | `const nextTrack = player.queue.next()` |
+| `nextTrack` | Get next track (no removal) | `const upcoming = player.queue.nextTrack` |
+
+</div>
+
+> **Note:** `queue.next()` is a method that removes and returns the next track. `queue.nextTrack` is a property that returns the next track without removing it.
+
+---
+
 ## Creating a Player
 
 ```typescript
@@ -30,7 +117,10 @@ const player = await yukino.createPlayer({
 await player.play();
 
 // Pause/Resume
-await player.pause();
+await player.pause(); // Pause playback
+await player.pause(false); // Resume playback (or use player.resume())
+
+// Resume (alias for pause(false))
 await player.resume();
 
 // Stop
@@ -54,6 +144,7 @@ await player.seek(60000); // Seek to 1 minute
 // Set volume (0-1000)
 await player.setVolume(100);
 ```
+
 
 ### Playback Information
 ```typescript
@@ -160,6 +251,29 @@ await player.setFilters({
 // Reset filters
 await player.resetFilter('equalizer');
 await player.resetFilters();
+```
+
+### More Filter Examples
+You can use additional built-in filters with `FilterUtil`:
+
+```typescript
+// Vibrato filter
+await player.setFilters(FilterUtil.vibrato({ frequency: 5, depth: 0.7 }));
+
+// Tremolo filter
+await player.setFilters(FilterUtil.tremolo({ frequency: 4, depth: 0.5 }));
+
+// Rotation filter (8D audio effect)
+await player.setFilters(FilterUtil.rotation({ rotationHz: 0.2 }));
+
+// Distortion filter
+await player.setFilters(FilterUtil.distortion({ sinOffset: 0.5, sinScale: 0.5 }));
+
+// Channel mix filter
+await player.setFilters(FilterUtil.channelMix({ leftToLeft: 0.5, rightToRight: 0.5 }));
+
+// Low pass filter
+await player.setFilters(FilterUtil.lowPass({ smoothing: 10 }));
 ```
 
 ## Voice Connection
