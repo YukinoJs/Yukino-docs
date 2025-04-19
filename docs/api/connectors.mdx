@@ -69,7 +69,7 @@ The `DiscordJSConnector` class implements the base `Connector` for Discord.js.
 ### Constructor
 ```typescript
 import { Client } from 'discord.js';
-import { DiscordJSConnector } from 'yukino';
+import { DiscordJSConnector } from 'yukinojs';
 
 const connector = new DiscordJSConnector({
   client: client, // Must be a logged-in Discord.js Client
@@ -107,7 +107,7 @@ await connector.sendVoiceUpdate('guild-id', null);
 You can create custom connectors for other Discord library implementations by extending the base `Connector` class:
 
 ```typescript
-import { Connector } from 'yukino';
+import { Connector } from 'yukinojs';
 
 class CustomConnector extends Connector {
   constructor(options: ConnectorOptions) {
