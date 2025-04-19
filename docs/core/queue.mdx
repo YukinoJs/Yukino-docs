@@ -11,6 +11,23 @@ A queue in Yukino has these key components:
 - Loop mode
 - Shuffle state
 
+## Queue Events and Player Integration
+
+> **Note:**
+> All queue events (such as `trackAdd`, `trackRemove`, `shuffle`, etc.) are also re-emitted by the Player instance that owns the queue. This means you can listen for queue events directly on the Player:
+>
+> ```typescript
+> player.on('queue:trackAdd', (track, position) => {
+>   // Handle track added to queue
+> });
+> ```
+> Or, if you prefer, you can listen on the queue itself:
+> ```typescript
+> queue.on('trackAdd', (track, position) => { ... });
+> ```
+>
+> This makes it easy to react to queue changes at the Player level, which is useful for bots and integrations.
+
 ## Basic Operations
 
 ### Adding Tracks
