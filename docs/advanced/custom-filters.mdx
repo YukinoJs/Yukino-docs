@@ -2,85 +2,100 @@
 
 Learn how to create and manage custom audio filters in Yukino.
 
-## Creating Custom Filter Combinations
+## Filter Utilities
 
-You can combine multiple filters to create unique audio effects:
+Yukino provides a comprehensive `FilterUtil` class to help with filter creation and manipulation:
 
 ```typescript
-interface CustomFilter {
-  name: string;
-  filters: FilterOptions;
-}
+import { FilterUtil } from 'yukinojs';
 
-class CustomFilterManager {
-  private filters: Map<string, CustomFilter>;
-  
-  constructor() {
-    this.filters = new Map();
-  }
+// Create a flat equalizer (all bands set to 0.0)
+const flatEQ = FilterUtil.createFlatEQ();
 
-  addFilter(name: string, filters: FilterOptions) {
-    this.filters.set(name, { name, filters });
-  }
+// Create a bass boost equalizer
+const bassBoostEQ = FilterUtil.createBassBoostEQ(0.6); // 0.6 gain
 
-  async applyFilter(player: Player, name: string) {
-    const filter = this.filters.get(name);
-    if (!filter) throw new Error(`Filter "${name}" not found`);
-    
-    await player.setFilters(filter.filters);
-  }
-}
+// Use built-in presets
+const nightcoreFilter = FilterUtil.nightcorePreset();
+const vaporwaveFilter = FilterUtil.vaporwavePreset();
+const eightDFilter = FilterUtil.eightDimensionalPreset();
+const nightModeFilter = FilterUtil.nightModePreset();
+const enhancedVocalsFilter = FilterUtil.enhancedVocalsPreset();
 ```
 
-### Example Custom Filters
+## Custom Filter Manager
 
-#### Night Mode Filter
+The `CustomFilterManager` class allows you to create and manage custom filter combinations:
+
 ```typescript
+import { CustomFilterManager } from 'yukinojs';
+
 const filterManager = new CustomFilterManager();
 
-filterManager.addFilter('night-mode', {
-  equalizer: [
-    { band: 0, gain: 0.3 },
-    { band: 1, gain: 0.3 },
-    { band: 2, gain: 0.2 },
-    { band: 3, gain: 0.1 },
-    { band: 4, gain: -0.1 },
-    { band: 5, gain: -0.2 },
-    { band: 6, gain: -0.3 },
-    { band: 7, gain: -0.3 },
-    { band: 8, gain: -0.3 },
-    { band: 9, gain: -0.3 },
-    { band: 10, gain: -0.2 },
-    { band: 11, gain: -0.2 },
-    { band: 12, gain: -0.2 },
-    { band: 13, gain: -0.1 }
-  ],
-  lowPass: {
-    smoothing: 15.0
-  }
+// Add filters with optional description and tags
+filterManager.addFilter('night-mode', FilterUtil.nightModePreset(), 
+  'Reduces treble and enhances bass for nighttime listening', 
+  ['night', 'bass', 'comfort']);
+
+filterManager.addFilter('enhanced-vocals', FilterUtil.enhancedVocalsPreset(),
+  'Enhances the vocal frequencies', 
+  ['vocals', 'clarity']);
+
+// Apply a filter to a player
+await filterManager.applyFilter(player, 'night-mode');
+
+// Get a specific filter
+const filter = filterManager.getFilter('night-mode');
+
+// Get all filter names
+const filterNames = filterManager.getFilterNames();
+
+// Get all filters
+const allFilters = filterManager.getAllFilters();
+
+// Find filters by tag
+const nightFilters = filterManager.findFiltersByTag('night');
+
+// Update an existing filter
+filterManager.updateFilter('night-mode', {
+  ...FilterUtil.nightModePreset(),
+  volume: 80
 });
+
+// Remove a filter
+filterManager.removeFilter('night-mode');
+
+// Clear all filters
+filterManager.clearFilters();
 ```
 
-#### Enhanced Vocals Filter
+### Event Handling
+
+The `CustomFilterManager` supports events to help you respond to filter changes:
+
 ```typescript
-filterManager.addFilter('enhanced-vocals', {
-  equalizer: [
-    { band: 0, gain: -0.2 },
-    { band: 1, gain: -0.2 },
-    { band: 2, gain: -0.1 },
-    { band: 3, gain: 0.0 },
-    { band: 4, gain: 0.3 },
-    { band: 5, gain: 0.4 },
-    { band: 6, gain: 0.4 },
-    { band: 7, gain: 0.3 },
-    { band: 8, gain: 0.0 },
-    { band: 9, gain: -0.1 },
-    { band: 10, gain: -0.2 },
-    { band: 11, gain: -0.2 },
-    { band: 12, gain: -0.3 },
-    { band: 13, gain: -0.3 }
-  ]
+filterManager.on('filterAdded', (data) => {
+  console.log(`New filter added: ${data.name}`);
 });
+
+filterManager.on('filterRemoved', (data) => {
+  console.log(`Filter removed: ${data.name}`);
+});
+
+filterManager.on('filterUpdated', (data) => {
+  console.log(`Filter updated: ${data.name}`);
+});
+
+filterManager.on('filterApplied', (data) => {
+  console.log(`Applied filter ${data.name} to player in guild ${data.player.guildId}`);
+});
+
+filterManager.on('filterInterpolationComplete', (data) => {
+  console.log(`Filter interpolation complete for player in guild ${data.player.guildId}`);
+});
+
+// Remove event listener
+filterManager.off('filterAdded', myCallback);
 ```
 
 ## Filter Interpolation
@@ -88,200 +103,196 @@ filterManager.addFilter('enhanced-vocals', {
 Create smooth transitions between filters:
 
 ```typescript
-interface InterpolationOptions {
-  steps?: number;
-  duration?: number;
-}
+// Using the CustomFilterManager
+await filterManager.interpolateFilters(
+  player,
+  FilterUtil.nightModePreset(),
+  { steps: 15, duration: 1000 }
+);
 
-async function interpolateFilters(
-  player: Player,
-  targetFilters: FilterOptions,
-  options: InterpolationOptions = {}
-) {
-  const { steps = 10, duration = 500 } = options;
-  const stepDuration = duration / steps;
-  const currentFilters = player.filters;
-  
-  for (let i = 1; i <= steps; i++) {
-    const fraction = i / steps;
-    const interpolated = interpolateFilterValues(
-      currentFilters,
-      targetFilters,
-      fraction
-    );
-    
-    await player.setFilters(interpolated);
-    await new Promise(r => setTimeout(r, stepDuration));
-  }
-}
+// Using FilterUtil directly
+const currentFilters = player.filters;
+const targetFilters = FilterUtil.enhancedVocalsPreset();
 
-function interpolateFilterValues(
-  current: FilterOptions,
-  target: FilterOptions,
-  fraction: number
-): FilterOptions {
-  const result: FilterOptions = {};
+for (let i = 1; i <= 10; i++) {
+  const fraction = i / 10;
+  const interpolated = FilterUtil.interpolateFilterValues(
+    currentFilters,
+    targetFilters,
+    fraction
+  );
   
-  // Interpolate volume
-  if (target.volume !== undefined) {
-    result.volume = lerp(
-      current.volume ?? 100,
-      target.volume,
-      fraction
-    );
-  }
-  
-  // Interpolate equalizer
-  if (target.equalizer) {
-    result.equalizer = target.equalizer.map((band, i) => ({
-      band: band.band,
-      gain: lerp(
-        current.equalizer?.[i]?.gain ?? 0,
-        band.gain,
-        fraction
-      )
-    }));
-  }
-  
-  // Interpolate other filters...
-  return result;
-}
-
-function lerp(start: number, end: number, fraction: number): number {
-  return start + (end - start) * fraction;
+  await player.setFilters(interpolated);
+  await new Promise(r => setTimeout(r, 50));
 }
 ```
 
 ## Dynamic Filter Generation
 
-Create filters based on audio analysis:
+Create filters based on parameters:
 
 ```typescript
-async function createDynamicEqualizer(
-  player: Player,
-  analysis: TrackAnalysis
-): Promise<EqualizerBand[]> {
-  const bands: EqualizerBand[] = [];
-  
-  // Example: Boost frequencies where vocals are typically present
-  if (analysis.hasVocals) {
-    bands.push(
-      { band: 4, gain: 0.3 }, // 160Hz
-      { band: 5, gain: 0.4 }, // 250Hz
-      { band: 6, gain: 0.4 }  // 400Hz
-    );
-  }
-  
-  // Example: Reduce bass for electronic music
-  if (analysis.genre === 'electronic') {
-    bands.push(
-      { band: 0, gain: -0.2 }, // 25Hz
-      { band: 1, gain: -0.1 }  // 40Hz
-    );
-  }
-  
-  return bands;
-}
+const dynamicFilter = FilterUtil.createDynamicFilter({
+  bassBoost: 0.5,  // 0-1 range
+  trebleBoost: 0.3,  // 0-1 range
+  vibrato: 0.2,    // 0-1 range
+  tempo: 1.2       // Playback speed
+});
+
+await player.setFilters(dynamicFilter);
 ```
 
-## Advanced Filter Management
+## Filter Chain System
 
-### Filter Chain System
+Chain multiple filters together:
+
 ```typescript
-class FilterChain {
-  private filters: FilterOptions[] = [];
-  
-  add(filter: FilterOptions) {
-    this.filters.push(filter);
-    return this;
-  }
-  
-  async apply(player: Player) {
-    const combined = this.filters.reduce(
-      (acc, filter) => this.combineFilters(acc, filter),
-      {} as FilterOptions
-    );
-    
-    await player.setFilters(combined);
-  }
-  
-  private combineFilters(
-    a: FilterOptions,
-    b: FilterOptions
-  ): FilterOptions {
-    return {
-      ...a,
-      ...b,
-      equalizer: this.combineEqualizers(
-        a.equalizer || [],
-        b.equalizer || []
-      )
-    };
-  }
-  
-  private combineEqualizers(
-    a: EqualizerBand[],
-    b: EqualizerBand[]
-  ): EqualizerBand[] {
-    return Array(15).fill(0).map((_, i) => ({
-      band: i,
-      gain: (a.find(x => x.band === i)?.gain || 0) +
-            (b.find(x => x.band === i)?.gain || 0)
-    }));
-  }
-}
+import { FilterChain } from 'yukinojs';
+
+const chain = new FilterChain('my-chain');
+
+// Add filters to the chain
+chain.add(FilterUtil.nightModePreset())
+     .add({ volume: 80 })
+     .add({ timescale: { pitch: 1.1 } });
+
+// Add a named filter from the filter manager
+chain.addNamed(filterManager, 'enhanced-vocals');
+
+// Apply the chain to a player
+await chain.apply(player);
+
+// Get the combined filter
+const combinedFilter = chain.combine();
+
+// Reset the chain
+chain.reset();
+
+// Get/set chain name
+const name = chain.getName();
+chain.setName('new-chain');
+```
+
+## Cached Filter Manager
+
+Optimize performance by caching generated filters:
+
+```typescript
+import { CachedFilterManager } from 'yukinojs';
+
+// Create with a TTL of 1 hour (default)
+const cachedFilters = new CachedFilterManager(3600000);
+
+// Get a filter (generates if not in cache)
+const filter = cachedFilters.getFilter('dynamic-bass-0.5', () => 
+  FilterUtil.createDynamicFilter({ bassBoost: 0.5 })
+);
+
+// Explicitly add a filter to cache
+cachedFilters.cacheFilter('my-special-filter', {
+  equalizer: FilterUtil.createBassBoostEQ(0.7)
+});
+
+// Remove a filter from cache
+cachedFilters.invalidate('dynamic-bass-0.5');
+
+// Clear the entire cache
+cachedFilters.clear();
+
+// Adjust TTL
+cachedFilters.setTTL(7200000); // 2 hours
+```
+
+## Utility Functions
+
+Yukino provides additional utility functions:
+
+```typescript
+// Validate filters
+FilterUtil.validateFilters({
+  volume: 80,
+  equalizer: [{ band: 0, gain: 0.5 }]
+});
+
+// Linear interpolation
+const interpolated = FilterUtil.lerp(0, 100, 0.5); // 50
+
+// Combine multiple filters
+const combined = FilterUtil.combineFilters(
+  FilterUtil.nightModePreset(),
+  { volume: 80 },
+  { timescale: { speed: 1.2 } }
+);
 ```
 
 ## Best Practices
 
-1. Validate filter values:
-```typescript
-function validateFilters(filters: FilterOptions): void {
-  if (filters.volume !== undefined) {
-    if (filters.volume < 0 || filters.volume > 1000) {
-      throw new Error('Volume must be between 0 and 1000');
-    }
-  }
-  
-  if (filters.equalizer) {
-    for (const band of filters.equalizer) {
-      if (band.gain < -0.25 || band.gain > 1.0) {
-        throw new Error('Equalizer gain must be between -0.25 and 1.0');
-      }
-    }
-  }
-  
-  // Validate other filters...
-}
-```
+1. **Validate filters before applying them**:
+   ```typescript
+   try {
+     FilterUtil.validateFilters(myCustomFilter);
+     await player.setFilters(myCustomFilter);
+   } catch (error) {
+     console.error('Invalid filter settings:', error.message);
+   }
+   ```
 
-2. Cache filter combinations:
-```typescript
-class CachedFilterManager {
-  private cache = new Map<string, FilterOptions>();
-  
-  getFilter(name: string, generate: () => FilterOptions): FilterOptions {
-    if (!this.cache.has(name)) {
-      this.cache.set(name, generate());
-    }
-    return this.cache.get(name)!;
-  }
-}
-```
+2. **Use filter interpolation for smooth transitions**:
+   ```typescript
+   // Instead of abrupt changes:
+   await player.setFilters(targetFilters);
+   
+   // Use interpolation:
+   await filterManager.interpolateFilters(player, targetFilters, { 
+     steps: 12, 
+     duration: 600 
+   });
+   ```
 
-3. Handle performance:
-```typescript
-// Limit filter updates
-let lastUpdate = 0;
-const UPDATE_INTERVAL = 50; // ms
+3. **Cache complex filter combinations**:
+   ```typescript
+   // For frequently used dynamic filters
+   const cachedManager = new CachedFilterManager();
+   
+   function getComplexFilter(params) {
+     const key = `complex-${params.bass}-${params.treble}`;
+     return cachedManager.getFilter(key, () => {
+       // Complex calculation here
+       return { /* filter */ };
+     });
+   }
+   ```
 
-async function updateFilters(player: Player, filters: FilterOptions) {
-  const now = Date.now();
-  if (now - lastUpdate < UPDATE_INTERVAL) {
-    return;
-  }
-  
-  lastUpdate = now;
-  await player.setFilters(filters);
-}
-```
+4. **Group related filters with tags**:
+   ```typescript
+   filterManager.addFilter('bass-boost-low', 
+     FilterUtil.createBassBoostEQ(0.3),
+     'Low bass boost',
+     ['bass', 'low-intensity']
+   );
+   
+   filterManager.addFilter('bass-boost-high', 
+     FilterUtil.createBassBoostEQ(0.7),
+     'High bass boost',
+     ['bass', 'high-intensity']
+   );
+   
+   // Later, find all bass filters
+   const bassFilters = filterManager.findFiltersByTag('bass');
+   ```
+
+5. **Throttle filter updates for performance**:
+   ```typescript
+   // CustomFilterManager already implements this internally
+   // for interpolation, but for custom code:
+   let lastUpdate = 0;
+   const UPDATE_INTERVAL = 50; // ms
+
+   async function updateFilters(player, filters) {
+     const now = Date.now();
+     if (now - lastUpdate < UPDATE_INTERVAL) return;
+     
+     lastUpdate = now;
+     await player.setFilters(filters);
+   }
+   ```

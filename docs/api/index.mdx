@@ -13,25 +13,25 @@ import { YukinoClient } from 'yukinojs';
 ### [Node](../core/node.mdx)
 Manages the WebSocket connection to Lavalink and handles events.
 ```typescript
-import { Node } from 'yukino';
+import { Node } from 'yukinojs';
 ```
 
 ### [Player](../core/player.mdx)
 Handles playback control and audio manipulation for a guild.
 ```typescript
-import { Player } from 'yukino';
+import { Player } from 'yukinojs';
 ```
 
 ### [Queue](../core/queue.mdx)
 Manages track queues for players.
 ```typescript
-import { Queue } from 'yukino';
+import { Queue } from 'yukinojs';
 ```
 
 ### [Rest](./rest.mdx)
 Handles HTTP communication with the Lavalink server.
 ```typescript
-import { Rest } from 'yukino';
+import { Rest } from 'yukinojs';
 ```
 
 ## Connectors
@@ -39,13 +39,13 @@ import { Rest } from 'yukino';
 ### [Connector](./connectors.mdx#base-connector)
 Base class for platform-specific connectors.
 ```typescript
-import { Connector } from 'yukino';
+import { Connector } from 'yukinojs';
 ```
 
 ### [DiscordJSConnector](./connectors.mdx#discordjs-connector)
 Discord.js-specific implementation.
 ```typescript
-import { DiscordJSConnector } from 'yukino';
+import { DiscordJSConnector } from 'yukinojs';
 ```
 
 ## Filters & Effects
@@ -53,7 +53,7 @@ import { DiscordJSConnector } from 'yukino';
 ### [FilterUtil](../features/filters.mdx)
 Utility class for audio filters and effects.
 ```typescript
-import { FilterUtil } from 'yukino';
+import { FilterUtil } from 'yukinojs';
 ```
 
 ## Types & Interfaces
@@ -61,25 +61,25 @@ import { FilterUtil } from 'yukino';
 ### [Events](./types.mdx#events)
 Event constants used throughout the library.
 ```typescript
-import { Events } from 'yukino';
+import { Events } from 'yukinojs';
 ```
 
 ### [LoadTypes](./types.mdx#load-types)
 Track loading result types.
 ```typescript
-import { LoadTypes } from 'yukino';
+import { LoadTypes } from 'yukinojs';
 ```
 
 ### [State](./types.mdx#state)
 Connection state constants.
 ```typescript
-import { State } from 'yukino';
+import { State } from 'yukinojs';
 ```
 
 ### [PlayerStates](./types.mdx#player-states)
 Player state constants.
 ```typescript
-import { PlayerStates } from 'yukino';
+import { PlayerStates } from 'yukinojs';
 ```
 
 ### Configuration Interfaces
@@ -108,3 +108,9 @@ import { PlayerStates } from 'yukino';
 ### Utility Types
 - [LavalinkEvent](./types.mdx#lavalink-event)
 - [NodeStats](./types.mdx#node-stats)
+
+### Other Utilities
+- [Logger](../features/logger.mdx) *(add documentation if not present)*
+- [Utils](../features/utils.mdx) *(add documentation if not present)*
+
+> **Note:** All main classes, types, and utilities are re-exported from the main entry point. Import everything from 'yukinojs'.

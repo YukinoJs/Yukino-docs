@@ -23,19 +23,16 @@ yukino.node.on('voiceStateUpdate', (state) => {
   });
 });
 
-// Handle disconnections
-yukino.node.on('voiceDisconnected', (player) => {
-  console.log(`Disconnected from voice in guild ${player.guildId}`);
-  // Optionally attempt reconnection
-  player.connect().catch(console.error);
-});
-
 // Handle WebSocket closure
-yukino.node.on('wsClosed', (player, data) => {
-  if (data?.code === 4006) {
+yukino.node.on('wsClosed', (player, code, reason, byRemote) => {
+  console.log(`WebSocket closed for guild ${player.guildId}`, {
+    code, reason, byRemote
+  });
+  
+  if (code === 4006) {
     // Session invalid - attempt reconnect
     setTimeout(() => {
-      if (player?.options.voiceChannelId) {
+      if (player && player.voiceChannelId) {
         player.connect().catch(console.error);
       }
     }, 2000);
@@ -72,7 +69,7 @@ client.on("voiceStateUpdate", async (oldState, newState) => {
 
 ## Auto-Management
 
-Simple auto-disconnect when channel is empty:
+Example auto-disconnect implementation when channel is empty:
 
 ```typescript
 class VoiceManager {
@@ -137,7 +134,7 @@ async function disconnect(player: Player) {
 }
 ```
 
-3. Monitor connection state:
+3. Monitor connection state using the debug event:
 ```typescript
 yukino.node.on('debug', (message) => {
   if (message.includes('voice')) {

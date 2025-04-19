@@ -2,6 +2,14 @@
 
 A Player in Yukino manages audio playback for a specific voice channel. It handles track playback, audio filtering, and voice connection state.
 
+---
+
+## Player & Queue API Quick Reference
+
+[See full Player & Queue API Reference →](../api/player.mdx)
+
+---
+
 ## Creating a Player
 
 ```typescript
@@ -30,7 +38,10 @@ const player = await yukino.createPlayer({
 await player.play();
 
 // Pause/Resume
-await player.pause();
+await player.pause(); // Pause playback
+await player.pause(false); // Resume playback (or use player.resume())
+
+// Resume (alias for pause(false))
 await player.resume();
 
 // Stop
@@ -54,6 +65,7 @@ await player.seek(60000); // Seek to 1 minute
 // Set volume (0-1000)
 await player.setVolume(100);
 ```
+
 
 ### Playback Information
 ```typescript
@@ -119,48 +131,7 @@ console.log('Loop mode:', player.loop);
 
 ## Audio Effects
 
-### Volume Control
-```typescript
-// Set volume (0-1000)
-await player.setVolume(100);
-
-// Fade volume
-await player.fade({
-  from: 100,
-  to: 50,
-  duration: 5000 // 5 seconds
-});
-```
-
-### Filters
-```typescript
-// Apply single filter
-await player.setFilter('equalizer', [
-  { band: 0, gain: 0.3 },
-  { band: 1, gain: 0.2 }
-]);
-
-// Apply multiple filters
-await player.setFilters({
-  equalizer: [
-    { band: 0, gain: 0.3 },
-    { band: 1, gain: 0.2 }
-  ],
-  timescale: {
-    speed: 1.2,
-    pitch: 1.1,
-    rate: 1.0
-  },
-  tremolo: {
-    frequency: 2.0,
-    depth: 0.5
-  }
-});
-
-// Reset filters
-await player.resetFilter('equalizer');
-await player.resetFilters();
-```
+> Audio effects and filter documentation has been moved. See [Audio Effects & Filters](../features/filters.mdx) for all usage, API, and best practices.
 
 ## Voice Connection
 

@@ -7,16 +7,25 @@ A Node in Yukino represents a connection to a Lavalink server. It handles track 
 ```typescript
 interface NodeOptions {
   name: string;          // Unique identifier for the node
-  url: string;          // URL of the Lavalink server
-  auth: string;         // Password for the Lavalink server
-  secure?: boolean;     // Whether to use WSS/HTTPS
-  group?: string;       // Group identifier for region-based routing
-  retryAmount?: number; // Number of reconnection attempts
-  retryDelay?: number;  // Delay between retries in milliseconds
-  reconnectOptions?: {  // Enhanced reconnection settings
-    maxRetryAttempts: number; // Maximum number of retry attempts
-    retryDelayInMs: number;   // Delay between retries
-  }
+  url: string;           // URL of the Lavalink server
+  auth: string;          // Password for the Lavalink server
+  secure?: boolean;      // Whether to use WSS/HTTPS
+  group?: string;        // Group identifier for region-based routing
+  // Reconnection options (all are supported, fallback order shown)
+  reconnectTries?: number;   // Number of reconnection attempts (legacy)
+  reconnectInterval?: number;// Delay between retries in ms (legacy)
+  retryAmount?: number;      // Alias for reconnectTries
+  retryDelay?: number;       // Alias for reconnectInterval
+  reconnectOptions?: {       // Nested reconnection settings (docs style)
+    retryAmount?: number;    // Number of reconnection attempts
+    retryDelay?: number;     // Delay between retries in ms
+  };
+  resumeKey?: string | null;
+  resumeTimeout?: number;
+  version?: string;
+  debug?: boolean;
+  priority?: number;
+  region?: string;
 }
 ```
 
@@ -25,9 +34,10 @@ interface NodeOptions {
 A node can be in one of these states:
 - `CONNECTING` - Initial connection attempt
 - `CONNECTED` - Successfully connected
-- `DISCONNECTED` - Connection lost
+- `DISCONNECTED` - Connection lost or destroyed (destroyed nodes emit a `destroyed` event and set state to `DISCONNECTED`)
 - `RECONNECTING` - Attempting to reconnect
-- `DESTROYED` - Node has been destroyed
+
+> **Note:** There is no explicit `DESTROYED` state in the code, but the node emits a `destroyed` event when destroyed.
 
 ## Connection Management
 
@@ -51,12 +61,12 @@ const node = yukino.addNode({
   name: 'main',
   url: 'localhost:2333',
   auth: 'password',
-  retryAmount: 5,    // Try 5 times
-  retryDelay: 5000   // Wait 5 seconds between attempts
+  retryAmount: 5,    // Try 5 times (or use reconnectTries)
+  retryDelay: 5000   // Wait 5 seconds between attempts (or use reconnectInterval)
 });
 
 // Listen for reconnection attempts
-node.on('reconnecting', (attempt) => {
+node.on('nodeReconnect', (node, attempt) => {
   console.log(`Reconnection attempt ${attempt}`);
 });
 ```
@@ -96,13 +106,13 @@ interface LoadTrackResponse {
 ### Memory Management
 ```typescript
 // Get node stats
-const stats = await node.getStats();
+const stats = node.stats;
 console.log('Memory used:', stats.memory.used);
 console.log('Memory allocated:', stats.memory.allocated);
 console.log('Memory reservable:', stats.memory.reservable);
 
 // Monitor memory usage
-node.on('stats', (stats) => {
+node.on('nodeStats', (node, stats) => {
   const memoryUsage = (stats.memory.used / stats.memory.allocated) * 100;
   if (memoryUsage > 90) {
     console.warn(`High memory usage on node ${node.name}: ${memoryUsage}%`);
@@ -113,13 +123,13 @@ node.on('stats', (stats) => {
 ### CPU Management
 ```typescript
 // Get CPU stats
-const stats = await node.getStats();
+const stats = node.stats;
 console.log('CPU cores:', stats.cpu.cores);
 console.log('System load:', stats.cpu.systemLoad);
 console.log('Lavalink load:', stats.cpu.lavalinkLoad);
 
 // Monitor CPU usage
-node.on('stats', (stats) => {
+node.on('nodeStats', (node, stats) => {
   if (stats.cpu.systemLoad > 80) {
     console.warn(`High CPU usage on node ${node.name}`);
   }
@@ -154,7 +164,7 @@ try {
 
 ### Frame Statistics
 ```typescript
-node.on('stats', (stats) => {
+node.on('nodeStats', (node, stats) => {
   // Monitor frame statistics
   console.log('Frames sent:', stats.frames.sent);
   console.log('Frames nulled:', stats.frames.nulled);
@@ -164,55 +174,9 @@ node.on('stats', (stats) => {
 
 ### Player Statistics
 ```typescript
-node.on('stats', (stats) => {
+node.on('nodeStats', (node, stats) => {
   // Monitor player counts
   console.log('Total players:', stats.players);
   console.log('Playing players:', stats.playingPlayers);
-});
-```
-
-## Advanced Features
-
-### Custom REST Routes
-```typescript
-// Define custom REST route
-node.defineRoute({
-  method: 'GET',
-  path: '/custom/route',
-  handler: async () => {
-    // Custom logic
-    return { status: 'ok' };
-  }
-});
-
-// Use custom route
-const response = await node.makeRequest('/custom/route');
-```
-
-### Version Compatibility
-```typescript
-// Check Lavalink version
-const version = await node.getVersion();
-console.log('Lavalink version:', version);
-
-// Check version compatibility
-if (version.major < 3) {
-  console.warn('This version of Lavalink is not fully supported');
-}
-```
-
-### Load Balancing
-```typescript
-// Get node penalties
-const penalties = node.penalties;
-console.log('CPU penalty:', penalties.cpu);
-console.log('Memory penalty:', penalties.memory);
-console.log('Deficit penalty:', penalties.deficit);
-console.log('Total penalty:', penalties.total);
-
-// Custom penalty calculation
-node.setPenaltyProvider(() => {
-  const stats = node.stats;
-  return (stats.cpu.systemLoad * 0.6) + (stats.memory.used / stats.memory.allocated * 0.4);
 });
 ```

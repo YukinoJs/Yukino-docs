@@ -1,8 +1,15 @@
 # Types Reference
 
+A comprehensive reference for Yukino's TypeScript types, enums, and interfaces. Use this as a guide for configuration, event handling, and advanced usage.
+
+---
+
 ## Constants
 
 ### Events
+
+Defines all event names emitted by Yukino for node, player, track, voice, and WebSocket events.
+
 ```typescript
 enum Events {
   // Node events
@@ -12,6 +19,7 @@ enum Events {
   NODE_RECONNECT = 'nodeReconnect',
   NODE_STATS = 'nodeStats',
   NODE_EVENT = 'nodeEvent',
+  NODE_ADD = 'nodeAdd',
 
   // Player events
   PLAYER_CREATE = 'playerCreate',
@@ -33,11 +41,14 @@ enum Events {
   // WebSocket events
   WS_CLOSED = 'wsClosed',
   WS_ERROR = 'wsError',
-  WS_OPEN = 'wsOpen'
+  WS_OPEN = 'wsOpen',
 }
 ```
 
 ### LoadTypes
+
+Represents the possible results of a track load/search operation.
+
 ```typescript
 enum LoadTypes {
   TRACK_LOADED = 'track',
@@ -49,6 +60,9 @@ enum LoadTypes {
 ```
 
 ### State
+
+Represents the connection state of a node.
+
 ```typescript
 enum State {
   CONNECTING = 0,
@@ -60,6 +74,9 @@ enum State {
 ```
 
 ### PlayerStates
+
+Represents the playback state of a player.
+
 ```typescript
 enum PlayerStates {
   PLAYING = 'playing',
@@ -68,9 +85,14 @@ enum PlayerStates {
 }
 ```
 
+---
+
 ## Configuration Interfaces
 
 ### ConnectorOptions
+
+Options for initializing a Yukino connector.
+
 ```typescript
 interface ConnectorOptions {
   client: Client;
@@ -83,10 +105,18 @@ interface ConnectorOptions {
   version?: string;
   sessionId?: string;
   debug?: boolean;
+  restOptions?: RestOptions;
+  defaultSearchEngine?: string;
+  userAgent?: string;
+  reconnectInterval?: number;
+  reconnectTries?: number;
 }
 ```
 
 ### NodeOptions
+
+Options for configuring a Lavalink node connection.
+
 ```typescript
 interface NodeOptions {
   name: string;
@@ -96,14 +126,28 @@ interface NodeOptions {
   group?: string;
   reconnectInterval?: number;
   reconnectTries?: number;
+  /** Number of reconnection attempts (alias for reconnectTries) */
+  retryAmount?: number;
+  /** Delay between reconnection attempts in ms (alias for reconnectInterval) */
+  retryDelay?: number;
+  /** Nested reconnect options (docs compatibility) */
+  reconnectOptions?: {
+    retryAmount?: number;
+    retryDelay?: number;
+  };
   resumeKey?: string | null;
   resumeTimeout?: number;
   version?: string;
   debug?: boolean;
+  priority?: number;
+  region?: string;
 }
 ```
 
 ### PlayerOptions
+
+Options for creating or configuring a player instance.
+
 ```typescript
 interface PlayerOptions {
   guildId: string;
@@ -111,12 +155,26 @@ interface PlayerOptions {
   voiceChannelId: string;
   deaf?: boolean;
   mute?: boolean;
+  selfDeaf?: boolean;
+  selfMute?: boolean;
   volume?: number;
   queueOptions?: QueueOptions;
+  node?: string;
+  nodeGroup?: string;
+  autoReconnect?: boolean;
+  options?: {
+    inactivityTimeout?: number;
+    volumeDecrementer?: number;
+    bufferingTimeout?: number;
+    [key: string]: any;
+  };
 }
 ```
 
 ### QueueOptions
+
+Options for customizing the player queue.
+
 ```typescript
 interface QueueOptions {
   maxSize?: number;
@@ -126,6 +184,9 @@ interface QueueOptions {
 ```
 
 ### RestOptions
+
+Options for REST API communication with Lavalink.
+
 ```typescript
 interface RestOptions {
   url: string;
@@ -134,12 +195,39 @@ interface RestOptions {
   timeout?: number;
   version?: string;
   debug?: boolean;
+  headers?: Record<string, string>;
+  retries?: number;
 }
 ```
+
+### YukinoOptions
+
+Top-level options for initializing the Yukino client.
+
+```typescript
+interface YukinoOptions {
+  nodes: NodeOptions[];
+  defaultSearchEngine?: string;
+  defaultPlayerOptions?: PlayerOptions;
+  reconnectTries?: number;
+  reconnectInterval?: number;
+  restTimeout?: number;
+  structures?: {
+    Node?: typeof Node;
+    Player?: typeof Player;
+  };
+  send: (guildId: string, payload: any) => Promise<void>;
+}
+```
+
+---
 
 ## Filter Interfaces
 
 ### FilterOptions
+
+Options for applying audio filters to a player.
+
 ```typescript
 interface FilterOptions {
   volume?: number;
@@ -156,6 +244,9 @@ interface FilterOptions {
 ```
 
 ### EqualizerBand
+
+Represents a single band in the equalizer filter.
+
 ```typescript
 interface EqualizerBand {
   band: number;
@@ -164,6 +255,9 @@ interface EqualizerBand {
 ```
 
 ### KaraokeOptions
+
+Options for the karaoke audio filter.
+
 ```typescript
 interface KaraokeOptions {
   level?: number;
@@ -174,6 +268,9 @@ interface KaraokeOptions {
 ```
 
 ### TimescaleOptions
+
+Options for the timescale audio filter.
+
 ```typescript
 interface TimescaleOptions {
   speed?: number;
@@ -183,6 +280,9 @@ interface TimescaleOptions {
 ```
 
 ### FrequencyDepthOptions
+
+Options for tremolo and vibrato filters.
+
 ```typescript
 interface FrequencyDepthOptions {
   frequency?: number;
@@ -191,6 +291,9 @@ interface FrequencyDepthOptions {
 ```
 
 ### RotationOptions
+
+Options for the rotation audio filter.
+
 ```typescript
 interface RotationOptions {
   rotationHz?: number;
@@ -198,6 +301,9 @@ interface RotationOptions {
 ```
 
 ### DistortionOptions
+
+Options for the distortion audio filter.
+
 ```typescript
 interface DistortionOptions {
   sinOffset?: number;
@@ -212,6 +318,9 @@ interface DistortionOptions {
 ```
 
 ### ChannelMixOptions
+
+Options for the channel mix audio filter.
+
 ```typescript
 interface ChannelMixOptions {
   leftToLeft?: number;
@@ -222,15 +331,23 @@ interface ChannelMixOptions {
 ```
 
 ### LowPassOptions
+
+Options for the low pass audio filter.
+
 ```typescript
 interface LowPassOptions {
   smoothing?: number;
 }
 ```
 
+---
+
 ## Track Related Types
 
 ### Track
+
+Represents an encoded track and its metadata.
+
 ```typescript
 interface Track {
   encoded: string;
@@ -239,6 +356,9 @@ interface Track {
 ```
 
 ### TrackInfo
+
+Detailed information about a track.
+
 ```typescript
 interface TrackInfo {
   identifier: string;
@@ -256,6 +376,9 @@ interface TrackInfo {
 ```
 
 ### LoadTrackResponse
+
+Response structure for track loading/searching.
+
 ```typescript
 interface LoadTrackResponse {
   loadType: string;
@@ -271,9 +394,14 @@ interface LoadTrackResponse {
 }
 ```
 
+---
+
 ## Event Types
 
 ### LavalinkEvent
+
+Represents a generic Lavalink event payload.
+
 ```typescript
 interface LavalinkEvent {
   op: string;
@@ -284,6 +412,9 @@ interface LavalinkEvent {
 ```
 
 ### NodeStats
+
+Statistics for a Lavalink node.
+
 ```typescript
 interface NodeStats {
   players: number;
@@ -306,3 +437,68 @@ interface NodeStats {
     deficit: number;
   };
 }
+```
+
+### PlayOptions
+
+Options for playing a track.
+
+```typescript
+interface PlayOptions {
+  track: Track;
+  options?: {
+    noReplace?: boolean;
+    startTime?: number;
+    endTime?: number;
+  };
+}
+```
+
+### CustomFilter
+
+Represents a custom audio filter definition.
+
+```typescript
+interface CustomFilter {
+  name: string;
+  description?: string;
+  filters: FilterOptions;
+  tags?: string[];
+}
+```
+
+### SearchOptions
+
+Options for searching tracks.
+
+```typescript
+interface SearchOptions {
+  source?: string;
+  requester?: string;
+  context?: Record<string, any>;
+}
+```
+
+### NodeGroup
+
+Represents a group of Lavalink nodes.
+
+```typescript
+interface NodeGroup {
+  name: string;
+  nodes: Node[];
+}
+```
+
+### LavalinkStats
+
+Aggregate statistics for all connected Lavalink nodes.
+
+```typescript
+interface LavalinkStats extends Omit<NodeStats, 'frameStats'> {
+  /**
+   * Individual stats for each node, keyed by node name
+   */
+  nodeStats: Record<string, NodeStats>;
+}
+```
