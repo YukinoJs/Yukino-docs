@@ -1,6 +1,6 @@
 # Client
 
-The `YukinoClient` is the core class that manages your bot's connection to Lavalink and handles all audio operations.
+The `YukinoClient` is the core class that manages your bot's connection to Lavalink and handles all audio operations, supporting multiple nodes and advanced player management.
 
 ## Creating a Client
 
@@ -12,65 +12,96 @@ const yukino = new YukinoClient(client, {
   auth: 'your-password',
   debug: true,
   // Custom options
-  reconnectInterval: 5000,
-  reconnectTries: 3
+  reconnectInterval: 5000, // Optional, default: 5000
+  reconnectTries: 3        // Optional, default: 3
 });
 ```
 
 ## Configuration Options
 
-### Required Options
-- `auth` - The password for your Lavalink server
-- `client` - Your Discord.js client instance
+### Required Options for Connector
 
-### Optional Options
+- `client` - Your Discord.js client instance
+- `auth` - The password for your Lavalink server
+
+### Optional Options for Connector
+
 - `debug` - Enable debug logging (default: false)
 - `reconnectInterval` - Time between reconnect attempts in ms (default: 5000)
 - `reconnectTries` - Number of reconnect attempts (default: 3)
-- `defaultSearchPlatform` - Platform to search on when no source is specified (default: 'youtube')
+- `defaultSearchEngine` - Search engine to use when no source is specified (default: 'ytsearch')
 - `userAgent` - Custom user agent for REST requests
+- `restOptions` - Custom REST options (timeout, retries, headers, etc.)
+
+### Required Options for Node
+
+- `name` - Unique identifier for the node
+- `url` - URL of the Lavalink server (hostname:port)
+- `auth` - Password for the Lavalink server
+
+### Optional Options for Node
+
+- `secure` - Whether to use WSS/HTTPS (default: false)
+- `group` - Group identifier for region-based selection
+- `priority` - Node priority for load balancing (lower is higher priority)
+- `region` - Region identifier for region-based selection
+- `resumeKey` - Key for resuming a session
+- `resumeTimeout` - Timeout in seconds for resuming a session
+- `reconnectInterval` - Time between reconnect attempts (default: 5000)
+- `reconnectTries` - Maximum number of reconnect attempts (default: 3)
 
 ## Node Management
 
 ### Adding Nodes
+
 ```typescript
 // Add a single node
-yukino.addNode({
-  name: 'main',
-  url: 'localhost:2333',
-  auth: 'your-password',
-  secure: false
+// NodeOptions type is required for each node
+const node = yukino.addNode({
+  name: "main",
+  url: "localhost:2333",
+  auth: "your-password",
+  secure: false,
 });
 
 // Add multiple nodes
-yukino.addNodes([
+const nodes = yukino.addNodes([
   {
-    name: 'node1',
-    url: 'node1.example.com:2333',
-    auth: 'password1',
-    secure: true
+    name: "node1",
+    url: "node1.example.com:2333",
+    auth: "password1",
+    secure: true,
+    group: "us",
   },
   {
-    name: 'node2',
-    url: 'node2.example.com:2333',
-    auth: 'password2',
-    secure: true
-  }
+    name: "node2",
+    url: "node2.example.com:2333",
+    auth: "password2",
+    secure: true,
+    group: "eu",
+  },
 ]);
 ```
 
 ### Node Selection
+
 Yukino automatically selects the best node for each player based on:
+
 - Load balancing
 - Node status
 - Node penalty (calculated from CPU/memory usage)
+- Node priority (lower values have higher priority)
+- Node group (for region-based routing)
 
-You can customize node selection:
+You can customize node selection with your own algorithm:
+
 ```typescript
 yukino.setNodeSelector((nodes, guildId) => {
   // Custom node selection logic
-  return nodes.sort((a, b) => 
-    (a.stats.cpu / a.stats.memory) - (b.stats.cpu / b.stats.memory)
+  return nodes.sort(
+    (a, b) =>
+      a.stats.cpu.lavalinkLoad / a.stats.memory.free -
+      b.stats.cpu.lavalinkLoad / b.stats.memory.free
   )[0];
 });
 ```
@@ -78,157 +109,209 @@ yukino.setNodeSelector((nodes, guildId) => {
 ## Player Management
 
 ### Creating Players
+
 ```typescript
-const player = await yukino.createPlayer({
-  guildId: 'guild-id',
-  voiceChannelId: 'channel-id',
-  textChannelId: 'text-channel-id', // Optional
-  deaf: true,  // Whether to deafen the bot
-  mute: false,  // Whether to mute the bot
-  autoReconnect: true  // Automatically reconnect on disconnect
-});
+import { PlayerOptions } from "yukinojs";
+
+const player = yukino.createPlayer({
+  guildId: "guild-id",
+  voiceChannelId: "channel-id",
+  textChannelId: "text-channel-id", // Optional
+  deaf: true, // Whether to deafen the bot
+  mute: false, // Whether to mute the bot
+  volume: 100, // Initial volume (0-1000)
+  node: "node1", // Optional: Specific node to use
+  nodeGroup: "us", // Optional: Node group to select from
+  autoReconnect: true, // Automatically reconnect on disconnect
+} as PlayerOptions);
 ```
 
 ### Getting Players
+
 ```typescript
 // Get a specific player
-const player = yukino.getPlayer('guild-id');
+const player = yukino.getPlayer("guild-id");
 
-// Get all players
+// Get all players (Map<string, Player>)
 const players = yukino.players;
 
 // Check if a guild has a player
-const hasPlayer = yukino.hasPlayer('guild-id');
+const hasPlayer = yukino.hasPlayer("guild-id");
+
+// Get a queue by guild ID
+const queue = yukino.getQueue("guild-id");
 ```
 
 ### Destroying Players
-```typescript
-// Destroy a specific player
-await yukino.destroyPlayer('guild-id');
 
-// Destroy all players
+```typescript
+// Destroy a specific player (returns Promise<boolean>)
+await yukino.destroyPlayer("guild-id");
+
+// Destroy all players (returns Promise<number>)
 await yukino.destroyAllPlayers();
 ```
 
 ## Track Loading
 
 ### Loading Tracks
+
 ```typescript
 // Load a track by search query
-const result = await yukino.loadTrack('never gonna give you up');
+const result = await yukino.loadTrack("never gonna give you up");
 
 // Load a track by URL
-const result = await yukino.loadTrack('https://youtube.com/watch?v=dQw4w9WgXcQ');
+const result = await yukino.loadTrack(
+  "https://youtube.com/watch?v=dQw4w9WgXcQ"
+);
 
 // Load a playlist
-const result = await yukino.loadTrack('https://youtube.com/playlist?list=...');
+const result = await yukino.loadTrack("https://youtube.com/playlist?list=...");
 ```
 
 ### Search Options
+
 ```typescript
-const result = await yukino.loadTrack('your query', {
-  // Specify search source
-  source: 'youtube', // 'youtube', 'soundcloud', etc.
-  
-  // Add additional context
+import { SearchTypes, SearchOptions } from "yukinojs";
+
+const result = await yukino.loadTrack("your query", {
+  // Specify search source (from SearchTypes enum)
+  source: SearchTypes.YOUTUBE, // 'ytsearch'
+  // Other options: YOUTUBE_MUSIC, SOUNDCLOUD, SPOTIFY, APPLE_MUSIC, DEEZER
+
+  // Add requester info (will be attached to each track)
+  requester: "user-id",
+
+  // Add custom context data (optional)
   context: {
-    requester: 'user-id',
-    guild: 'guild-id'
-  }
-});
+    channelId: "channel-id",
+    requestTime: Date.now(),
+  },
+} as SearchOptions);
 ```
 
 ## Event Handling
 
-### Node Events
-```typescript
-// Node connected
-yukino.node.on('nodeConnect', (node) => {
-  console.log(`Node ${node.name} connected`);
-});
+> **Note:** All events are emitted from `yukino.nodeManager`. Use `yukino.nodeManager.on(...)` to listen for events.
 
-// Node disconnected
-yukino.node.on('nodeDisconnect', (node, reason) => {
-  console.log(`Node ${node.name} disconnected:`, reason);
+### Node Events
+
+```typescript
+import { Events } from "yukinojs";
+
+// Node ready
+yukino.nodeManager.on(Events.NODE_READY, (node) => {
+  console.log(`Node ${node.name} is now ready`);
 });
 
 // Node error
-yukino.node.on('nodeError', (node, error) => {
+yukino.nodeManager.on(Events.NODE_ERROR, (node, error) => {
   console.error(`Node ${node.name} error:`, error);
+});
+
+// Node closed
+yukino.nodeManager.on(Events.NODE_CLOSED, (node, code, reason) => {
+  console.log(`Node ${node.name} closed: Code ${code}, Reason: ${reason}`);
+});
+
+// Node stats update
+yukino.nodeManager.on(Events.NODE_STATS, (node, stats) => {
+  console.log(`Node ${node.name} stats:`, stats);
 });
 ```
 
 ### Track Events
+
 ```typescript
+import { Events } from "yukinojs";
+
 // Track started
-yukino.node.on('trackStart', (player, track) => {
-  console.log(`Playing ${track.info.title}`);
+yukino.nodeManager.on(Events.TRACK_START, (player, track) => {
+  console.log(`Playing ${track.info.title} in guild ${player.guildId}`);
 });
 
 // Track ended
-yukino.node.on('trackEnd', (player, track) => {
-  console.log(`Finished ${track.info.title}`);
+yukino.nodeManager.on(Events.TRACK_END, (player, track, reason) => {
+  console.log(`Finished ${track.info.title} (${reason})`);
 });
 
 // Track stuck
-yukino.node.on('trackStuck', (player, track, thresholdMs) => {
+yukino.nodeManager.on(Events.TRACK_STUCK, (player, track, thresholdMs) => {
   console.warn(`Track ${track.info.title} stuck for ${thresholdMs}ms`);
 });
 
 // Track error
-yukino.node.on('trackError', (player, track, error) => {
+yukino.nodeManager.on(Events.TRACK_ERROR, (player, track, error) => {
   console.error(`Error playing ${track.info.title}:`, error);
 });
 ```
 
-### Voice Events
+### Player Events
+
 ```typescript
-// Voice state update
-yukino.node.on('voiceStateUpdate', (state) => {
-  console.log('Voice state updated:', state);
+import { Events } from "yukinojs";
+
+// Player created
+yukino.nodeManager.on(Events.PLAYER_CREATE, (player) => {
+  console.log(`Player created for guild ${player.guildId}`);
 });
 
-// Voice server update
-yukino.node.on('voiceServerUpdate', (server) => {
-  console.log('Voice server updated:', server);
+// Player destroyed
+yukino.nodeManager.on(Events.PLAYER_DESTROY, (player) => {
+  console.log(`Player destroyed for guild ${player.guildId}`);
+});
+
+// Player updated
+yukino.nodeManager.on(Events.PLAYER_UPDATE, (player, state) => {
+  console.log(`Player updated for guild ${player.guildId}`, state);
+});
+
+// WebSocket closed
+yukino.nodeManager.on(Events.WS_CLOSED, (player, code, reason, byRemote) => {
+  console.log(`WebSocket closed for guild ${player.guildId}: ${reason}`);
 });
 ```
 
 ## Error Handling
 
 ### Client Level Error Handling
+
 ```typescript
-yukino.on('error', (error) => {
-  console.error('Client error:', error);
-});
+import { Events } from "yukinojs";
 
-yukino.on('warn', (warning) => {
-  console.warn('Client warning:', warning);
-});
+// General error handling
+yukino.nodeManager.on(Events.NODE_ERROR, (node, error) => {
+  console.error(`Node ${node.name} error:`, error);
 
-// Handle specific errors
-yukino.on('nodeError', (node, error) => {
-  if (error.code === 'ECONNREFUSED') {
-    console.error(`Failed to connect to node ${node.name}`);
+  // Reconnect logic for specific errors
+  if (error.message.includes("ECONNREFUSED")) {
+    console.log(`Connection refused to node ${node.name}, will retry...`);
   }
+});
+
+// Track error handling
+yukino.nodeManager.on(Events.TRACK_ERROR, (player, track, error) => {
+  console.error(
+    `Error playing ${track.info.title} in guild ${player.guildId}:`,
+    error
+  );
+
+  // Skip to next track on error
+  player.skip().catch(console.error);
 });
 ```
 
 ### Player Level Error Handling
+
 ```typescript
-const player = await yukino.createPlayer({
-  guildId: 'guild-id',
-  voiceChannelId: 'channel-id'
-});
+// Get an existing player
+const player = yukino.getPlayer("guild-id");
 
-player.on('error', (error) => {
-  console.error('Player error:', error);
-});
-
-// Handle track errors
-player.on('trackError', (track, error) => {
+// Handle errors at the player level
+player.on(Events.TRACK_ERROR, (track, error) => {
   console.error(`Error playing ${track.info.title}:`, error);
-  // Skip to next track
+
+  // Take appropriate action
   player.skip().catch(console.error);
 });
 ```
@@ -236,64 +319,113 @@ player.on('trackError', (track, error) => {
 ## Advanced Usage
 
 ### Custom REST Options
+
 ```typescript
-const yukino = new YukinoClient(client, {
-  auth: 'your-password',
-  rest: {
+const connectorOptions = {
+  client,
+  auth: "your-password",
+  restOptions: {
     timeout: 10000,
     retries: 3,
     headers: {
-      'User-Agent': 'MyBot/1.0.0'
-    }
-  }
-});
+      "User-Agent": "MyBot/1.0.0",
+      "X-Custom-Header": "CustomValue",
+    },
+  },
+};
+
+const yukino = new YukinoClient(client, connectorOptions, nodeOptions);
 ```
 
-### Node Groups
+### Node Groups for Region-based Routing
+
 ```typescript
 // Create node groups for different regions
 yukino.addNodes([
   {
-    name: 'us-east',
-    url: 'us1.example.com:2333',
-    group: 'us'
+    name: "us-east",
+    url: "us1.example.com:2333",
+    auth: "password",
+    group: "us",
+    region: "us-east",
   },
   {
-    name: 'us-west',
-    url: 'us2.example.com:2333',
-    group: 'us'
+    name: "us-west",
+    url: "us2.example.com:2333",
+    auth: "password",
+    group: "us",
+    region: "us-west",
   },
   {
-    name: 'eu-central',
-    url: 'eu1.example.com:2333',
-    group: 'eu'
-  }
+    name: "eu-central",
+    url: "eu1.example.com:2333",
+    auth: "password",
+    group: "eu",
+    region: "eu-central",
+  },
 ]);
 
-// Select nodes by group
+// Select nodes by group and region
 yukino.setNodeSelector((nodes, guildId) => {
+  if (!guildId) return nodes[0];
+
+  // Get guild from Discord.js client
   const guild = client.guilds.cache.get(guildId);
-  const region = guild.preferredLocale.includes('en-US') ? 'us' : 'eu';
-  
-  return nodes
-    .filter(node => node.group === region)
-    .sort((a, b) => a.penalties - b.penalties)[0];
+  if (!guild) return nodes[0];
+
+  // Determine best region based on guild settings
+  let preferredGroup = "us";
+
+  if (guild.preferredLocale.startsWith("en-US")) {
+    preferredGroup = "us";
+  } else if (
+    guild.preferredLocale.startsWith("en-GB") ||
+    guild.preferredLocale.startsWith("de") ||
+    guild.preferredLocale.startsWith("fr")
+  ) {
+    preferredGroup = "eu";
+  }
+
+  // Filter by group, then sort by penalties
+  const groupNodes = nodes.filter((node) => node.group === preferredGroup);
+  if (groupNodes.length === 0) return nodes[0];
+
+  return groupNodes.sort((a, b) => a.penalties - b.penalties)[0];
 });
 ```
 
-### State Management
+### State Management and Statistics
+
 ```typescript
 // Get client state
-console.log('Version:', yukino.version);
-console.log('Connected:', yukino.isReady);
-console.log('Total players:', yukino.players.size);
-console.log('Total nodes:', yukino.nodes.size);
+console.log("Version:", yukino.version);
+console.log("Ready:", yukino.isReady);
+console.log("Players:", yukino.players.size);
+console.log("Nodes:", yukino.nodes.size);
+console.log("Ideal node:", yukino.idealNode?.name);
 
-// Get detailed stats
+// Get detailed Lavalink stats
 const stats = yukino.getLavaStats();
-console.log('Players:', stats.players);
-console.log('Playing players:', stats.playingPlayers);
-console.log('Uptime:', stats.uptime);
-console.log('Memory usage:', stats.memory);
-console.log('CPU usage:', stats.cpu);
+console.log("Total players:", stats.players);
+console.log("Playing players:", stats.playingPlayers);
+console.log("Memory usage:", {
+  used: `${Math.round(stats.memory.used / 1024 / 1024)} MB`,
+  allocated: `${Math.round(stats.memory.allocated / 1024 / 1024)} MB`,
+  free: `${Math.round(stats.memory.free / 1024 / 1024)} MB`,
+});
+console.log("CPU usage:", {
+  cores: stats.cpu.cores,
+  systemLoad: `${Math.round(stats.cpu.systemLoad * 100)}%`,
+  lavalinkLoad: `${Math.round(stats.cpu.lavalinkLoad * 100)}%`,
+});
+console.log("Uptime:", `${Math.round(stats.uptime / 1000 / 60)} minutes`);
+
+// Get stats for individual nodes
+Object.entries(stats.nodeStats).forEach(([nodeName, nodeStats]) => {
+  console.log(`Node ${nodeName} stats:`, {
+    players: nodeStats.players,
+    playingPlayers: nodeStats.playingPlayers,
+    cpuLoad: `${Math.round(nodeStats.cpu.lavalinkLoad * 100)}%`,
+  });
+});
 ```
