@@ -1,0 +1,62 @@
+# Utility Functions
+
+Yukino provides several helpful utility functions for common tasks. These are especially useful when building bots or handling audio/queue logic.
+
+## Check URL
+`isValidURL(url: string): boolean`
+Checks if a string is a valid URL.
+
+```typescript
+import { isValidURL } from 'yukino';
+
+isValidURL('https://example.com'); // true
+isValidURL('not a url'); // false
+```
+
+## Format Time
+`formatTime(ms: number): string`
+Formats milliseconds into a human-readable time string (hh:mm:ss or mm:ss).
+
+```typescript
+import { formatTime } from 'yukino';
+
+formatTime(65000); // '01:05'
+formatTime(3723000); // '01:02:03'
+```
+
+## Wait
+`wait(ms: number): Promise<void>`
+Returns a Promise that resolves after the specified milliseconds.
+
+```typescript
+import { wait } from 'yukino';
+
+await wait(1000); // Waits 1 second
+```
+
+## Merge Default Options
+`mergeDefault<T>(def: T, given: Partial<T>): T`
+Deep merges a default object with user-provided options.
+
+```typescript
+import { mergeDefault } from 'yukino';
+
+const defaults = { volume: 100, filters: { bass: false } };
+const user = { filters: { bass: true } };
+const merged = mergeDefault(defaults, user);
+// merged: { volume: 100, filters: { bass: true } }
+```
+
+## Generate Random String
+`generateRandomString(length: number): string`
+Generates a random alphanumeric string of the given length.
+
+```typescript
+import { generateRandomString } from 'yukino';
+
+generateRandomString(8); // e.g. 'aB3dE9fG'
+```
+
+---
+
+These utilities are available throughout Yukino and can simplify many common coding tasks.
